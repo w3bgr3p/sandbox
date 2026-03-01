@@ -1,0 +1,19 @@
+name = "autoz3n-access"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+LOCK_ADDRESS = "0x3944f971b35112851bc176fc57cde79c5e6ca0c8,0xb66ef42779c3e580b9f2336fd7e4926d912f5b1a,0x71402755b9721c8a24b62b59c48365aa989b69bd,0x5ab320ef80d02f40efd41ca73dc5da2ef6f5f553"
+CHAIN_ID = "56"
+RPC_URL = "https://bsc-dataseed.bnbchain.org"
+MAX_TOKEN_ID = "200"
+ALLOWED_ORIGIN = "https://sandbox.autoz3n.xyz"
+#"https://autoz3n-sandbox.pages.dev"
+
+# PRIVY_APP_ID — добавь через dashboard или secrets:
+# npx wrangler secret put PRIVY_APP_ID
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "981e7447c9f84d73a7925de1aa7089d6"
+preview_id = "71ffec5de5074e39bc5f3e70ecdfa695"
