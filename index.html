@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>autoZ3N sandbox — Полигон для обучения</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap');
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+      --accent: #00ff88; --accent2: #ff3366; --accent3: #3366ff;
+      --text: #c8c8d8; --dim: #4a4a6a;
+      --mono: 'JetBrains Mono', monospace; --sans: 'Space Grotesk', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+    .site-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: var(--mono); font-size: 18px; color: var(--accent); letter-spacing: -1px; }
+    .logo span { color: var(--accent2); }
+    .nav a { color: var(--dim); text-decoration: none; margin: 0 10px; font-size: 13px; transition: color .2s; }
+    .nav a:hover { color: var(--accent); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .zone { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 32px; overflow: hidden; }
+    .zone-header { background: #0d0d1a; border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 10px; }
+    .zone-label { font-family: var(--mono); font-size: 11px; color: var(--accent); background: rgba(0,255,136,.08); border: 1px solid rgba(0,255,136,.2); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .zone-title { font-size: 13px; color: var(--dim); font-family: var(--mono); }
+    .zone-body { padding: 20px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    label { font-size: 11px; color: var(--dim); font-family: var(--mono); text-transform: uppercase; letter-spacing: .5px; }
+    input[type=text], input[type=email], input[type=password], input[type=number], input[type=tel], input[type=url], input[type=search], input[type=date], input[type=time], input[type=datetime-local], input[type=month], input[type=week], input[type=color], textarea, select { background: #0a0a10; border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--mono); font-size: 13px; padding: 8px 12px; width: 100%; outline: none; transition: border-color .2s; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input[type=color] { height: 38px; padding: 3px 6px; cursor: pointer; }
+    input[type=range] { width: 100%; accent-color: var(--accent); }
+    input[type=file] { color: var(--dim); font-family: var(--mono); font-size: 12px; }
+    input[readonly] { opacity: .5; }
+    input[disabled], select[disabled], textarea[disabled] { opacity: .35; cursor: not-allowed; }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: #111; }
+    .checks-row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .check-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .check-item input { width: auto; accent-color: var(--accent); }
+    .check-item span { font-size: 13px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn { font-family: var(--mono); font-size: 12px; padding: 8px 18px; border-radius: 5px; cursor: pointer; border: none; transition: all .15s; text-transform: uppercase; letter-spacing: .5px; }
+    .btn-primary { background: var(--accent); color: #000; font-weight: 700; }
+    .btn-primary:hover { background: #00cc6e; }
+    .btn-danger { background: var(--accent2); color: #fff; }
+    .btn-danger:hover { background: #cc1144; }
+    .btn-blue { background: var(--accent3); color: #fff; }
+    .btn-blue:hover { background: #2255cc; }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-disabled { background: var(--border); color: var(--dim); cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #0d0d1a; color: var(--dim); font-family: var(--mono); font-size: 11px; text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    tr:hover td { background: rgba(255,255,255,.02); }
+    a { color: var(--accent3); text-decoration: none; }
+    a:hover { color: var(--accent); text-decoration: underline; }
+    a.link-danger { color: var(--accent2); }
+    a.link-disabled { color: var(--dim); pointer-events: none; }
+    .alert { padding: 12px 16px; border-radius: 5px; font-size: 13px; margin-bottom: 10px; border-left: 3px solid; }
+    .alert-info { background: rgba(51,102,255,.1); border-color: var(--accent3); color: #88aaff; }
+    .alert-success { background: rgba(0,255,136,.08); border-color: var(--accent); color: var(--accent); }
+    .alert-warning { background: rgba(255,200,0,.08); border-color: #ffcc00; color: #ffcc00; }
+    .alert-error { background: rgba(255,51,102,.08); border-color: var(--accent2); color: var(--accent2); }
+    progress { width: 100%; height: 8px; border-radius: 4px; overflow: hidden; appearance: none; border: none; background: var(--border); margin-bottom: 8px; }
+    progress::-webkit-progress-bar { background: var(--border); }
+    progress::-webkit-progress-value { background: var(--accent); }
+    details { border: 1px solid var(--border); border-radius: 5px; margin-bottom: 8px; overflow: hidden; }
+    summary { padding: 10px 14px; cursor: pointer; font-family: var(--mono); font-size: 13px; background: #0d0d1a; list-style: none; }
+    summary::before { content: '▶ '; color: var(--accent); font-size: 10px; }
+    details[open] summary::before { content: '▼ '; }
+    .details-body { padding: 14px; font-size: 13px; }
+    dialog { background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; color: var(--text); padding: 24px; width: 360px; font-family: var(--sans); }
+    dialog::backdrop { background: rgba(0,0,0,.8); }
+    .dialog-title { font-family: var(--mono); color: var(--accent); margin-bottom: 12px; }
+    .dialog-btns { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+    meter { width: 100%; height: 10px; margin-bottom: 8px; }
+    ul.styled, ol.styled { padding-left: 20px; font-size: 13px; color: var(--text); }
+    ul.styled li, ol.styled li { margin-bottom: 4px; }
+    iframe { border: 1px solid var(--border); border-radius: 5px; background: #fff; width: 100%; }
+    canvas { display: block; border: 1px solid var(--border); border-radius: 5px; cursor: crosshair; background: #050508; }
+    .shadow-wrapper { border: 1px dashed var(--accent3); border-radius: 6px; padding: 14px; position: relative; }
+    .shadow-label { position: absolute; top: -10px; left: 12px; background: var(--surface); padding: 0 6px; font-family: var(--mono); font-size: 10px; color: var(--accent3); }
+    #dynamic-target { min-height: 40px; border: 1px dashed var(--border); border-radius: 5px; padding: 10px; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot-green { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .dot-red { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .dot-yellow { background: #ffcc00; box-shadow: 0 0 6px #ffcc00; }
+    .chip { display: inline-block; background: rgba(0,255,136,.08); border: 1px solid rgba(0,255,136,.2); color: var(--accent); font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 20px; margin: 2px; }
+    .chip-red { background: rgba(255,51,102,.08); border-color: rgba(255,51,102,.2); color: var(--accent2); }
+    .chip-blue { background: rgba(51,102,255,.08); border-color: rgba(51,102,255,.2); color: #88aaff; }
+    [title] { cursor: help; border-bottom: 1px dotted var(--dim); }
+    #canvas-status { font-family: var(--mono); font-size: 12px; padding: 8px; margin-top: 8px; color: var(--dim); }
+    output { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+    fieldset { border: 1px solid var(--border); border-radius: 5px; padding: 14px 16px; margin-bottom: 14px; }
+    legend { font-family: var(--mono); font-size: 11px; color: var(--dim); padding: 0 6px; text-transform: uppercase; }
+    video, audio { width: 100%; border-radius: 5px; margin-bottom: 8px; }
+    dl { font-size: 13px; }
+    dt { color: var(--dim); font-family: var(--mono); font-size: 11px; text-transform: uppercase; margin-top: 10px; }
+    dd { color: var(--text); padding-left: 14px; }
+    abbr { text-decoration: underline dotted var(--dim); cursor: help; }
+    code { background: #0d0d1a; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-family: var(--mono); font-size: 12px; color: var(--accent); }
+    pre { background: #0d0d1a; border: 1px solid var(--border); border-radius: 5px; padding: 14px; font-family: var(--mono); font-size: 12px; overflow-x: auto; color: var(--text); margin-bottom: 8px; }
+    blockquote { border-left: 3px solid var(--accent3); padding: 8px 16px; color: var(--dim); font-style: italic; margin: 8px 0; }
+    .toggle { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+    .toggle input { display: none; }
+    .toggle-track { width: 40px; height: 22px; background: var(--border); border-radius: 11px; position: relative; transition: background .2s; }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: left .2s; }
+    .toggle input:checked ~ .toggle-thumb, .toggle input:checked + .toggle-track + .toggle-thumb { left: 21px; }
+    .badge { display: inline-block; min-width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 10px; font-size: 11px; font-family: var(--mono); padding: 0 6px; }
+    .badge-green { background: var(--accent); color: #000; }
+    .badge-red { background: var(--accent2); color: #fff; }
+    [contenteditable] { border: 1px solid var(--border); border-radius: 5px; padding: 10px 12px; font-family: var(--mono); font-size: 13px; outline: none; min-height: 40px; }
+    [contenteditable]:focus { border-color: var(--accent); }
+    .hidden-by-style { display: none; }
+    .invisible { visibility: hidden; }
+    .opacity-zero { opacity: 0; height: 1px; overflow: hidden; }
+    .scroll-x { overflow-x: auto; white-space: nowrap; border: 1px solid var(--border); border-radius: 5px; padding: 10px; }
+    #delayed-element { display: none; background: rgba(0,255,136,.08); border: 1px solid var(--accent); border-radius: 5px; padding: 10px 14px; font-family: var(--mono); font-size: 13px; color: var(--accent); margin-top: 10px; }
+    .pagination { display: flex; gap: 4px; }
+    .page-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); font-family: var(--mono); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+    .autocomplete-wrapper { position: relative; }
+    #autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #111; border: 1px solid var(--border); border-radius: 5px; display: none; z-index: 50; font-family: var(--mono); font-size: 13px; }
+    #autocomplete-list div { padding: 8px 12px; cursor: pointer; color: var(--text); transition: background .1s; }
+    #autocomplete-list div:hover { background: rgba(0,255,136,.1); color: var(--accent); }
+    #infinite-list { height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 5px; padding: 8px; font-family: var(--mono); font-size: 12px; }
+    .list-item { padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+    .list-item:last-child { border-bottom: none; }
+    .drop-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--dim); transition: all .2s; }
+    .drop-zone.over { border-color: var(--accent); color: var(--accent); background: rgba(0,255,136,.05); }
+    .drag-item { display: inline-block; padding: 6px 14px; background: #0d0d1a; border: 1px solid var(--border); border-radius: 5px; margin: 4px; font-family: var(--mono); font-size: 12px; cursor: grab; color: var(--text); }
+    .drag-item:active { cursor: grabbing; opacity: .7; }
+    #counter-value { font-family: var(--mono); font-size: 28px; color: var(--accent); min-width: 60px; text-align: center; display: inline-block; }
+    .tree { font-family: var(--mono); font-size: 13px; }
+    .tree details summary { list-style: none; cursor: pointer; padding: 3px 0; }
+    .tree details summary::before { content: '▶ '; font-size: 10px; color: var(--accent3); }
+    .tree details[open] summary::before { content: '▼ '; }
+    .tree-leaf { padding: 3px 0 3px 18px; color: var(--dim); }
+    .tree-leaf::before { content: '└─ '; color: var(--border); }
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .tab-btn { background: none; border: none; color: var(--dim); font-family: var(--mono); font-size: 12px; padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; text-transform: uppercase; letter-spacing: .5px; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    footer { text-align: center; padding: 32px; font-family: var(--mono); font-size: 11px; color: var(--dim); border-top: 1px solid var(--border); margin-top: 32px; }
+    @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="logo">autoZ3N<span>//</span>SANDBOX</div>
+  <nav class="nav">
+    <a href="#forms">Формы</a>
+    <a href="#buttons">Кнопки</a>
+    <a href="#shadow">Shadow DOM</a>
+    <a href="#canvas">Canvas</a>
+    <a href="#dynamic">Динамика</a>
+    <a href="#tricky">Хитрые</a>
+    <a href="#web3">Web3</a>
+    <a href="#fingerprint" style="color:#ffcc00;">Fingerprint</a>
+    <a href="#antibot" style="color:#ff3366;">Anti-bot</a>
+    <a href="#devtools" style="color:#ff6600;">Devtools</a>
+  </nav>
+</header>
+<div class="container">
+
+  <!-- ZONES 1-12: оригинальный контент сохранён без изменений -->
+
+  <!-- ═══════════════ ZONE 01: TEXT INPUTS ═══════════════ -->
+  <section class="zone" id="forms">
+    <div class="zone-header">
+      <span class="zone-label">Zone 01</span>
+      <span class="zone-title">// Текстовые поля — все типы input</span>
+    </div>
+    <div class="zone-body">
+      <div class="grid-2">
+        <div>
+          <div class="field-group"><label for="input-text">type="text"</label><input type="text" id="input-text" name="username" placeholder="Обычный текст" data-testid="input-username" autocomplete="username" /></div>
+          <div class="field-group"><label for="input-email">type="email"</label><input type="email" id="input-email" name="email" placeholder="user@example.com" data-testid="input-email" /></div>
+          <div class="field-group"><label for="input-password">type="password"</label><input type="password" id="input-password" name="password" placeholder="Пароль" data-testid="input-password" autocomplete="current-password" /></div>
+          <div class="field-group"><label for="input-number">type="number"</label><input type="number" id="input-number" name="quantity" placeholder="0" min="0" max="999" step="1" data-testid="input-number" /></div>
+          <div class="field-group"><label for="input-tel">type="tel"</label><input type="tel" id="input-tel" name="phone" placeholder="+7 (___) ___-__-__" data-testid="input-phone" /></div>
+          <div class="field-group"><label for="input-url">type="url"</label><input type="url" id="input-url" name="website" placeholder="https://" data-testid="input-url" /></div>
+        </div>
+        <div>
+          <div class="field-group"><label for="input-search">type="search"</label><input type="search" id="input-search" name="q" placeholder="Поиск..." data-testid="input-search" /></div>
+          <div class="field-group"><label for="input-date">type="date"</label><input type="date" id="input-date" name="birthday" data-testid="input-date" /></div>
+          <div class="field-group"><label for="input-time">type="time"</label><input type="time" id="input-time" name="meeting-time" data-testid="input-time" /></div>
+          <div class="field-group"><label for="input-datetime">type="datetime-local"</label><input type="datetime-local" id="input-datetime" name="event-dt" data-testid="input-datetime" /></div>
+          <div class="field-group"><label for="input-month">type="month"</label><input type="month" id="input-month" name="birth-month" data-testid="input-month" /></div>
+          <div class="field-group"><label for="input-week">type="week"</label><input type="week" id="input-week" name="work-week" data-testid="input-week" /></div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="field-group"><label for="input-color">type="color"</label><input type="color" id="input-color" name="fav-color" value="#00ff88" data-testid="input-color" /></div>
+        <div class="field-group"><label for="input-range">type="range"</label><input type="range" id="input-range" name="volume" min="0" max="100" value="42" data-testid="input-range" /><output for="input-range" id="range-output">42</output></div>
+        <div class="field-group"><label for="input-file">type="file"</label><input type="file" id="input-file" name="upload" data-testid="input-file" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field-group"><label for="input-readonly">readonly</label><input type="text" id="input-readonly" name="ro-field" value="Нельзя редактировать" readonly data-testid="input-readonly" /></div>
+        <div class="field-group"><label for="input-disabled">disabled</label><input type="text" id="input-disabled" name="dis-field" value="Задизейблен" disabled data-testid="input-disabled" /></div>
+      </div>
+      <input type="hidden" id="hidden-token" name="csrf_token" value="abc123xyz" data-testid="hidden-token" />
+      <input type="hidden" id="hidden-user-id" name="user_id" value="42" />
+      <div class="field-group"><label for="textarea-main">textarea</label><textarea id="textarea-main" name="message" rows="4" placeholder="Многострочный текст..." maxlength="500" data-testid="textarea-message"></textarea></div>
+      <div class="field-group">
+        <label for="input-autocomplete">Поле с автодополнением</label>
+        <div class="autocomplete-wrapper">
+          <input type="text" id="input-autocomplete" name="city" placeholder="Введите город..." autocomplete="off" data-testid="input-city" />
+          <div id="autocomplete-list">
+            <div data-value="moscow">Москва</div><div data-value="spb">Санкт-Петербург</div><div data-value="ekb">Екатеринбург</div><div data-value="nsk">Новосибирск</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 02: SELECT & CHECKS ═══════════════ -->
+  <section class="zone">
+    <div class="zone-header"><span class="zone-label">Zone 02</span><span class="zone-title">// Select, Checkbox, Radio, Toggle</span></div>
+    <div class="zone-body">
+      <div class="grid-2">
+        <div>
+          <div class="field-group"><label for="select-single">select (одиночный)</label><select id="select-single" name="country" data-testid="select-country"><option value="">— выберите —</option><option value="ru">Россия</option><option value="us">США</option><option value="de">Германия</option><option value="cn">Китай</option><option value="jp">Япония</option></select></div>
+          <div class="field-group"><label for="select-grouped">select с optgroup</label><select id="select-grouped" name="browser" data-testid="select-browser"><optgroup label="Chromium"><option value="chrome">Chrome</option><option value="edge">Edge</option><option value="brave">Brave</option></optgroup><optgroup label="Gecko"><option value="firefox">Firefox</option></optgroup></select></div>
+          <div class="field-group"><label for="select-multi">select multiple</label><select id="select-multi" name="lang[]" multiple size="5" data-testid="select-lang"><option value="1">Python</option><option value="2">C#</option><option value="3">JavaScript</option><option value="4">Rust</option><option value="5">Go</option></select></div>
+          <div class="field-group"><label for="select-disabled">select disabled</label><select id="select-disabled" name="plan" disabled data-testid="select-disabled"><option>Недоступно</option></select></div>
+        </div>
+        <div>
+          <fieldset><legend>Чекбоксы</legend><div class="checks-row" style="flex-direction:column;gap:10px;"><label class="check-item"><input type="checkbox" id="cb-1" name="options" value="opt1" data-testid="cb-option1" /><span>Опция 1</span></label><label class="check-item"><input type="checkbox" id="cb-2" name="options" value="opt2" checked data-testid="cb-option2" /><span>Опция 2 (checked)</span></label><label class="check-item"><input type="checkbox" id="cb-3" name="options" value="opt3" disabled data-testid="cb-option3" /><span>Опция 3 (disabled)</span></label><label class="check-item"><input type="checkbox" id="cb-indeterminate" name="select-all" data-testid="cb-selectall" /><span>Полувыбранный (indeterminate)</span></label></div></fieldset>
+          <fieldset style="margin-top:14px;"><legend>Radio-группа</legend><div class="checks-row" style="flex-direction:column;gap:10px;"><label class="check-item"><input type="radio" id="radio-a" name="tier" value="free" data-testid="radio-free" /><span>Free</span></label><label class="check-item"><input type="radio" id="radio-b" name="tier" value="pro" checked data-testid="radio-pro" /><span>Pro</span></label><label class="check-item"><input type="radio" id="radio-c" name="tier" value="enterprise" data-testid="radio-enterprise" /><span>Enterprise</span></label></div></fieldset>
+          <div style="margin-top:16px;"><div style="margin-bottom:10px;font-size:11px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;">Toggle switches</div><label class="toggle" style="margin-bottom:12px;display:flex;"><input type="checkbox" id="toggle-1" data-testid="toggle-notifications" /><div class="toggle-track"></div><div class="toggle-thumb"></div><span style="margin-left:8px;font-size:13px;">Уведомления</span></label><label class="toggle" style="display:flex;"><input type="checkbox" id="toggle-2" checked data-testid="toggle-darkmode" /><div class="toggle-track"></div><div class="toggle-thumb"></div><span style="margin-left:8px;font-size:13px;">Тёмная тема</span></label></div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:16px;"><label for="input-datalist">input + datalist</label><input type="text" id="input-datalist" name="framework" list="frameworks-list" placeholder="Введите или выберите..." data-testid="input-framework" /><datalist id="frameworks-list"><option value="React"><option value="Vue"><option value="Angular"><option value="Svelte"><option value="Solid"></datalist></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 03: BUTTONS ═══════════════ -->
+  <section class="zone" id="buttons">
+    <div class="zone-header"><span class="zone-label">Zone 03</span><span class="zone-title">// Кнопки всех мастей</span></div>
+    <div class="zone-body">
+      <div class="btn-row" style="margin-bottom:16px;"><button class="btn btn-primary" id="btn-primary" type="button" data-testid="btn-submit">Отправить</button><button class="btn btn-danger" id="btn-danger" type="button" data-testid="btn-delete">Удалить</button><button class="btn btn-blue" id="btn-blue" type="button" data-testid="btn-save">Сохранить</button><button class="btn btn-ghost" id="btn-ghost" type="button" data-testid="btn-cancel">Отмена</button><button class="btn btn-disabled" id="btn-disabled" type="button" disabled data-testid="btn-disabled">Недоступно</button></div>
+      <div class="btn-row" style="margin-bottom:16px;"><button class="btn btn-primary" id="btn-dialog-open" type="button" data-testid="btn-open-dialog">Открыть диалог</button><button class="btn btn-ghost" id="btn-toggle-delayed" type="button" data-testid="btn-delayed">Показать элемент через 2 сек</button><button class="btn btn-ghost" id="btn-add-dynamic" type="button" data-testid="btn-add-element">+ Добавить элемент в DOM</button><button class="btn btn-ghost" id="btn-remove-dynamic" type="button" data-testid="btn-remove-element">− Удалить элемент</button></div>
+      <form id="main-form" action="#" method="post" data-testid="main-form" style="margin-top:8px;"><div class="grid-2" style="margin-bottom:12px;"><div class="field-group"><label for="form-name">Имя</label><input type="text" id="form-name" name="name" placeholder="Иван" required data-testid="form-name" /></div><div class="field-group"><label for="form-email">Email</label><input type="email" id="form-email" name="email" placeholder="ivan@mail.ru" required data-testid="form-email" /></div></div><div class="btn-row"><button type="submit" class="btn btn-primary" id="btn-form-submit" data-testid="btn-form-submit">Submit формы</button><button type="reset" class="btn btn-ghost" id="btn-form-reset" data-testid="btn-form-reset">Reset формы</button><input type="submit" class="btn btn-blue" value="input[type=submit]" id="input-submit" data-testid="input-submit" /></div></form>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:6px;"><button class="btn btn-ghost" id="btn-decrement" data-testid="btn-decrement">−</button><span id="counter-value">0</span><button class="btn btn-ghost" id="btn-increment" data-testid="btn-increment">+</button><span style="font-family:var(--mono);font-size:12px;color:var(--dim);">← Счётчик</span></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 04: SHADOW DOM OPEN ═══════════════ -->
+  <section class="zone" id="shadow">
+    <div class="zone-header"><span class="zone-label" style="color:#3366ff;border-color:rgba(51,102,255,.3);background:rgba(51,102,255,.08);">Zone 04</span><span class="zone-title">// Shadow DOM — open mode</span></div>
+    <div class="zone-body">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:16px;font-family:var(--mono);">// Shadow root в режиме open — доступен через element.shadowRoot</p>
+      <div class="shadow-wrapper"><span class="shadow-label">shadow-root (open)</span><div id="shadow-host-open" data-testid="shadow-host-open"></div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 05: SHADOW DOM CLOSED ═══════════════ -->
+  <section class="zone">
+    <div class="zone-header"><span class="zone-label" style="color:var(--accent2);border-color:rgba(255,51,102,.3);background:rgba(255,51,102,.08);">Zone 05</span><span class="zone-title">// Shadow DOM — closed mode</span></div>
+    <div class="zone-body">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:16px;font-family:var(--mono);">// Shadow root в режиме closed — element.shadowRoot === null.</p>
+      <div class="shadow-wrapper" style="border-color:rgba(255,51,102,.4);"><span class="shadow-label" style="color:var(--accent2);">shadow-root (closed)</span><div id="shadow-host-closed" data-testid="shadow-host-closed"></div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 06: CANVAS ═══════════════ -->
+  <section class="zone" id="canvas">
+    <div class="zone-header"><span class="zone-label" style="color:#ffcc00;border-color:rgba(255,200,0,.3);background:rgba(255,200,0,.08);">Zone 06</span><span class="zone-title">// Canvas — попади в кнопку</span></div>
+    <div class="zone-body">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:14px;font-family:var(--mono);">// Нарисованная на canvas кнопка. Каждый раз в случайном месте.</p>
+      <canvas id="main-canvas" width="700" height="200" data-testid="main-canvas"></canvas>
+      <div id="canvas-status">// Кликните по кнопке на canvas</div>
+      <div class="btn-row" style="margin-top:10px;"><button class="btn btn-ghost" id="btn-redraw-canvas" data-testid="btn-redraw-canvas">Перерисовать</button></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 07: IFRAME ═══════════════ -->
+  <section class="zone">
+    <div class="zone-header"><span class="zone-label">Zone 07</span><span class="zone-title">// iframe — вложенный документ</span></div>
+    <div class="zone-body">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:12px;font-family:var(--mono);">// В iframe живёт отдельный document. В ZP: GetDocumentByAddress("1") — первый iframe.</p>
+      <iframe id="main-iframe" name="main-iframe" height="200" data-testid="iframe-main" srcdoc="<!DOCTYPE html><html><head><style>body{margin:0;background:#050508;color:#c8c8d8;font-family:monospace;padding:16px;}.f{background:#0a0a10;border:1px solid #1e1e2e;color:#c8c8d8;padding:7px 10px;width:200px;border-radius:4px;margin:6px 0;display:block;}.b{background:#00ff88;color:#000;border:none;padding:7px 14px;border-radius:4px;cursor:pointer;font-family:monospace;font-size:12px;font-weight:700;}p{font-size:11px;color:#4a4a6a;margin-bottom:12px;}</style></head><body><p>// Элементы внутри iframe</p><input type='text' class='f' id='iframe-input' placeholder='Логин внутри iframe' data-testid='iframe-input'/><input type='password' class='f' id='iframe-pass' placeholder='Пароль внутри iframe' data-testid='iframe-pass'/><button class='b' id='iframe-btn' data-testid='iframe-btn' onclick='this.textContent=&quot;Нажато!&quot;'>Кнопка в iframe</button></body></html>"></iframe>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 08: DYNAMIC DOM ═══════════════ -->
+  <section class="zone" id="dynamic">
+    <div class="zone-header"><span class="zone-label">Zone 08</span><span class="zone-title">// Динамический DOM</span></div>
+    <div class="zone-body">
+      <p style="font-size:12px;color:var(--dim);margin-bottom:12px;font-family:var(--mono);">// Элементы появляются после действий или с задержкой.</p>
+      <div id="dynamic-target">// Здесь появятся динамические элементы</div>
+      <div id="delayed-element" data-testid="delayed-element">✓ Элемент появился через 2 секунды — id="delayed-element"</div>
+      <div style="margin-top:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Бесконечный список (scroll)</div><div id="infinite-list" data-testid="infinite-list"><div class="list-item" data-id="1">Элемент #1</div><div class="list-item" data-id="2">Элемент #2</div><div class="list-item" data-id="3">Элемент #3</div><div class="list-item" data-id="4">Элемент #4</div><div class="list-item" data-id="5">Элемент #5</div></div></div>
+      <div style="margin-top:20px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Табы</div><div class="tab-bar"><button class="tab-btn active" data-tab="tab-a" data-testid="tab-a">Alpha</button><button class="tab-btn" data-tab="tab-b" data-testid="tab-b">Beta</button><button class="tab-btn" data-tab="tab-c" data-testid="tab-c">Gamma</button></div><div class="tab-panel active" id="tab-a" data-testid="panel-a"><div style="font-family:var(--mono);font-size:13px;color:var(--dim);">Контент вкладки Alpha.</div></div><div class="tab-panel" id="tab-b" data-testid="panel-b"><input type="text" id="tab-b-input" placeholder="Поле внутри вкладки Beta" data-testid="tab-b-input" /></div><div class="tab-panel" id="tab-c" data-testid="panel-c"><div style="font-family:var(--mono);font-size:13px;color:var(--accent);">✓ Вы добрались до вкладки Gamma!</div></div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 09: TRICKY ELEMENTS ═══════════════ -->
+  <section class="zone" id="tricky">
+    <div class="zone-header"><span class="zone-label" style="color:var(--accent2);border-color:rgba(255,51,102,.3);background:rgba(255,51,102,.08);">Zone 09</span><span class="zone-title">// Хитрые элементы — ловушки</span></div>
+    <div class="zone-body">
+      <div style="margin-bottom:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Скрытые в DOM элементы</div><div class="hidden-by-style" id="hidden-display-none" data-testid="hidden-display-none"><input type="text" value="display:none" name="hidden-field" /></div><div class="invisible" id="invisible-element" data-testid="invisible-element"><input type="text" id="invisible-input" name="invisible-field" value="visibility:hidden" data-testid="invisible-input" /></div><input type="text" class="opacity-zero" id="opacity-zero-input" name="opacity-field" value="opacity:0" data-testid="opacity-zero-input" /><div style="font-size:12px;color:var(--dim);font-family:var(--mono);">↑ Три поля выше скрыты по-разному.</div></div>
+      <div style="margin-bottom:16px;position:relative;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Перекрытые элементы</div><div style="position:relative;height:60px;"><button class="btn btn-ghost" id="btn-behind" data-testid="btn-behind" style="position:absolute;top:10px;left:10px;z-index:1;">Кнопка сзади</button><div style="position:absolute;top:0;left:0;width:200px;height:60px;background:rgba(255,51,102,.15);border:1px solid var(--accent2);border-radius:5px;z-index:2;display:flex;align-items:center;padding-left:14px;font-family:var(--mono);font-size:12px;color:var(--accent2);">Перекрывающий слой</div></div></div>
+      <div style="margin-bottom:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Drag &amp; Drop</div><div style="margin-bottom:10px;"><span class="drag-item" draggable="true" id="drag-1" data-testid="drag-item-1">Item A</span><span class="drag-item" draggable="true" id="drag-2" data-testid="drag-item-2">Item B</span><span class="drag-item" draggable="true" id="drag-3" data-testid="drag-item-3">Item C</span></div><div class="drop-zone" id="drop-zone" data-testid="drop-zone">Перетащи сюда</div></div>
+      <div style="margin-bottom:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">contenteditable</div><div contenteditable="true" id="editable-div" role="textbox" data-testid="editable-div">Этот текст можно редактировать напрямую в div</div></div>
+      <dialog id="main-dialog" data-testid="main-dialog"><div class="dialog-title">// dialog элемент</div><p style="font-size:13px;color:var(--dim);">Нативный HTML &lt;dialog&gt;.</p><input type="text" id="dialog-input" name="dialog-field" placeholder="Поле внутри диалога" data-testid="dialog-input" style="margin-top:12px;background:#0a0a10;border:1px solid #1e1e2e;color:#c8c8d8;padding:8px 12px;border-radius:5px;width:100%;font-family:monospace;" /><div class="dialog-btns"><button class="btn btn-ghost" id="btn-dialog-close" data-testid="btn-dialog-close">Закрыть</button><button class="btn btn-primary" id="btn-dialog-confirm" data-testid="btn-dialog-confirm">Подтвердить</button></div></dialog>
+      <div style="margin-bottom:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Дерево (details)</div><div class="tree" data-testid="tree-root"><details id="tree-node-1" data-testid="tree-node-1"><summary>Раздел A</summary><div class="tree-leaf" data-testid="tree-leaf-a1">Пункт A-1</div><div class="tree-leaf" data-testid="tree-leaf-a2">Пункт A-2</div><details id="tree-node-1-1" data-testid="tree-node-1-1"><summary>Подраздел A-3</summary><div class="tree-leaf" data-testid="tree-leaf-a3-1">Пункт A-3-1</div></details></details><details id="tree-node-2" data-testid="tree-node-2"><summary>Раздел B</summary><div class="tree-leaf" data-testid="tree-leaf-b1">Пункт B-1</div></details></div></div>
+      <div style="margin-bottom:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">Пагинация</div><div class="pagination" id="pagination" data-testid="pagination"><button class="page-btn" data-page="prev" data-testid="page-prev">‹</button><button class="page-btn active" data-page="1" data-testid="page-1">1</button><button class="page-btn" data-page="2" data-testid="page-2">2</button><button class="page-btn" data-page="3" data-testid="page-3">3</button><button class="page-btn" data-page="4" data-testid="page-4">4</button><button class="page-btn" data-page="5" data-testid="page-5">5</button><button class="page-btn" data-page="next" data-testid="page-next">›</button></div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 10: MISC HTML ═══════════════ -->
+  <section class="zone">
+    <div class="zone-header"><span class="zone-label">Zone 10</span><span class="zone-title">// Прочие HTML-элементы</span></div>
+    <div class="zone-body">
+      <div class="grid-2">
+        <div>
+          <div class="alert alert-info" id="alert-info" data-testid="alert-info">Информация — alert-info</div>
+          <div class="alert alert-success" id="alert-success" data-testid="alert-success">Успех — alert-success</div>
+          <div class="alert alert-warning" id="alert-warning" data-testid="alert-warning">Предупреждение</div>
+          <div class="alert alert-error" id="alert-error" data-testid="alert-error">Ошибка — alert-error</div>
+          <div style="margin-top:14px;margin-bottom:4px;font-size:11px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;">progress &amp; meter</div>
+          <progress id="progress-main" value="65" max="100" data-testid="progress-main"></progress>
+          <progress id="progress-indeterminate" data-testid="progress-indeterminate"></progress>
+          <meter id="meter-main" value="0.7" min="0" max="1" low="0.25" high="0.75" optimum="0.9" data-testid="meter-main"></meter>
+          <div style="margin-top:14px;margin-bottom:8px;font-size:11px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;">Статус-индикаторы</div>
+          <div style="display:flex;gap:20px;align-items:center;"><span><span class="status-dot dot-green"></span><span id="status-online" data-testid="status-online">Online</span></span><span><span class="status-dot dot-red"></span><span id="status-offline" data-testid="status-offline">Offline</span></span><span><span class="status-dot dot-yellow"></span><span id="status-pending" data-testid="status-pending">Pending</span></span></div>
+          <div style="margin-top:14px;"><span class="chip" data-testid="chip-1">automation</span><span class="chip" data-testid="chip-2">zenno</span><span class="chip chip-red" data-testid="chip-error">error</span><span class="chip chip-blue" data-testid="chip-info">info</span><span class="badge badge-green" data-testid="badge-count">42</span><span class="badge badge-red" data-testid="badge-error">!</span></div>
+        </div>
+        <div>
+          <table id="data-table" data-testid="data-table"><thead><tr><th>#</th><th>Имя</th><th>Статус</th><th>Действие</th></tr></thead><tbody><tr data-row="1" data-testid="table-row-1"><td>1</td><td id="table-name-1">Алиса</td><td><span class="chip" data-testid="status-1">active</span></td><td><a href="#" class="link-danger" data-testid="table-delete-1">удалить</a></td></tr><tr data-row="2" data-testid="table-row-2"><td>2</td><td id="table-name-2">Боб</td><td><span class="chip chip-red" data-testid="status-2">banned</span></td><td><a href="#" class="link-danger" data-testid="table-delete-2">удалить</a></td></tr><tr data-row="3" data-testid="table-row-3"><td>3</td><td id="table-name-3">Виктор</td><td><span class="chip chip-blue" data-testid="status-3">pending</span></td><td><a href="#" class="link-danger" data-testid="table-delete-3">удалить</a></td></tr></tbody></table>
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:6px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;margin-bottom:4px;">Ссылки</div><a href="https://example.com" id="link-external" target="_blank" data-testid="link-external">Внешняя ссылка (target=_blank)</a><a href="#forms" id="link-anchor" data-testid="link-anchor">Якорная ссылка (#forms)</a><a href="#" id="link-js" data-testid="link-js" onclick="return false;">Ссылка с onclick</a><a class="link-disabled" id="link-disabled" data-testid="link-disabled">Задизейблена</a></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">details/summary</div><details id="details-1" data-testid="details-1"><summary>Скрытый раздел 1</summary><div class="details-body"><input type="text" id="details-input" placeholder="Поле внутри details" data-testid="details-input" /></div></details><details id="details-2" open data-testid="details-2"><summary>Раздел 2 — открыт по умолчанию</summary><div class="details-body">Контент видимый сразу.</div></details></div>
+      <div style="margin-top:16px;font-size:13px;line-height:2;"><p>Обычный <strong>жирный</strong> <em>курсив</em> <u>подчёркнутый</u> <s>зачёркнутый</s> <code>inline code</code> <abbr title="ZennoPoster">ZP</abbr></p><blockquote id="quote-main" data-testid="quote-main">Это blockquote — цитата.</blockquote><pre id="pre-main" data-testid="pre-main"><code>var doc = instance.ActiveTab.MainDocument;
+var el = doc.FindElementById("input-text");</code></pre></div>
+      <div style="margin-top:16px;"><div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;text-transform:uppercase;">ARIA-атрибуты</div><div role="button" id="aria-btn" tabindex="0" aria-label="Кастомная кнопка" data-testid="aria-button" style="display:inline-block;padding:8px 16px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--text);" onclick="this.style.borderColor='var(--accent)';this.textContent='Кликнуто!'">div[role=button] — не кнопка, но кликабелен</div><div role="alert" id="aria-alert" aria-live="polite" data-testid="aria-alert" style="display:inline-block;margin-left:12px;font-family:var(--mono);font-size:12px;color:var(--dim);">[aria-live zone]</div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 11: EVENT LOG ═══════════════ -->
+  <section class="zone">
+    <div class="zone-header"><span class="zone-label">Zone 11</span><span class="zone-title">// Лог событий</span></div>
+    <div class="zone-body">
+      <div id="event-log" data-testid="event-log" style="height:140px;overflow-y:auto;background:#050508;border:1px solid var(--border);border-radius:5px;padding:10px;font-family:var(--mono);font-size:11px;color:var(--dim);"><div>// Лог пуст — взаимодействуй с элементами</div></div>
+      <button class="btn btn-ghost" id="btn-clear-log" data-testid="btn-clear-log" style="margin-top:8px;font-size:11px;">Очистить лог</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════ ZONE 12: WEB3 ═══════════════ -->
+  <section class="zone" id="web3">
+    <div class="zone-header"><span class="zone-label" style="color:#a855f7;border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.08);">Zone 12</span><span class="zone-title">// Web3 — Injected Wallet (MetaMask)</span></div>
+    <div class="zone-body">
+      <p style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:16px;">// Требует браузерного расширения-кошелька. Попап подтверждения — отдельное окно расширения.</p>
+      <div class="grid-2">
+        <div>
+          <div style="margin-bottom:16px;padding:12px 14px;background:#050508;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;"><div style="color:var(--dim);margin-bottom:6px;font-size:11px;text-transform:uppercase;">Статус</div><div id="web3-status" data-testid="web3-status" style="color:var(--dim);">не подключён</div></div>
+          <div style="margin-bottom:16px;padding:12px 14px;background:#050508;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;"><div style="color:var(--dim);margin-bottom:6px;font-size:11px;text-transform:uppercase;">Адрес кошелька</div><div id="web3-address" data-testid="web3-address" style="color:var(--accent);word-break:break-all;">—</div></div>
+          <div style="padding:12px 14px;background:#050508;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;"><div style="color:var(--dim);margin-bottom:6px;font-size:11px;text-transform:uppercase;">Подпись</div><div id="web3-signature" data-testid="web3-signature" style="color:#a855f7;word-break:break-all;max-height:60px;overflow:hidden;">—</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div id="web3-no-wallet" data-testid="web3-no-wallet" style="display:none;padding:10px 14px;background:rgba(255,51,102,.06);border:1px solid rgba(255,51,102,.2);border-radius:5px;font-family:var(--mono);font-size:12px;color:var(--accent2);">⚠ window.ethereum не найден</div>
+          <button class="btn" id="btn-web3-check" data-testid="btn-web3-check" style="background:rgba(168,85,247,.15);color:#a855f7;border:1px solid rgba(168,85,247,.3);font-size:12px;">Проверить window.ethereum</button>
+          <button class="btn" id="btn-web3-connect" data-testid="btn-web3-connect" style="background:#a855f7;color:#fff;font-size:12px;">Connect Wallet</button>
+          <div class="field-group"><label for="web3-message-input" style="color:#a855f7;">Сообщение для подписи</label><input type="text" id="web3-message-input" data-testid="web3-message-input" value="ZP Sandbox auth" placeholder="Текст для подписи..." /></div>
+          <button class="btn" id="btn-web3-sign" data-testid="btn-web3-sign" style="background:rgba(168,85,247,.15);color:#a855f7;border:1px solid rgba(168,85,247,.3);font-size:12px;" disabled>Sign Message</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       ZONE 13: CANVAS FINGERPRINTING
+  ═══════════════════════════════════════════════════════ -->
+  <section class="zone" id="fingerprint">
+    <div class="zone-header">
+      <span class="zone-label" style="color:#ffcc00; border-color:rgba(255,200,0,.3); background:rgba(255,200,0,.08);">Zone 13</span>
+      <span class="zone-title">// Canvas Fingerprinting — отпечаток браузера через canvas</span>
+    </div>
+    <div class="zone-body">
+      <p style="font-family:var(--mono); font-size:11px; color:var(--dim); margin-bottom:16px; line-height:1.8;">
+        // Сайты рисуют текст и фигуры на скрытом canvas, считывают пиксели через getImageData() и хэшируют результат.<br>
+        // Рендеринг отличается у разных GPU, ОС, версий браузера и драйверов — это уникальный отпечаток.<br>
+        // Используется в: Cloudflare, PerimeterX, Akamai, FingerprintJS, DataDome и других anti-bot системах.
+      </p>
+
+      <div class="grid-2">
+        <div>
+          <!-- Скрытый canvas для fingerprint (как делают реальные сайты) -->
+          <div style="margin-bottom:12px; font-size:11px; color:var(--dim); font-family:var(--mono); text-transform:uppercase;">Скрытый canvas (как у реальных сайтов)</div>
+          <canvas id="fp-canvas-hidden" width="280" height="60"
+                  style="display:block; border:1px dashed rgba(255,200,0,.3); border-radius:5px; background:#050508;"
+                  data-testid="fp-canvas-hidden"></canvas>
+          <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-top:6px;">
+            ↑ Виден только для демонстрации. Реально — style="display:none" или position:absolute; left:-9999px
+          </div>
+
+          <!-- Результаты -->
+          <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px; font-family:var(--mono); font-size:11px;">
+              <div style="color:var(--dim); margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px;">Canvas Hash (SHA-256 like)</div>
+              <div id="fp-hash" data-testid="fp-hash" style="color:#ffcc00; word-break:break-all; font-size:12px;">— нажмите Generate</div>
+            </div>
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px; font-family:var(--mono); font-size:11px;">
+              <div style="color:var(--dim); margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px;">DataURL (первые 80 символов)</div>
+              <div id="fp-dataurl" data-testid="fp-dataurl" style="color:var(--text); word-break:break-all; font-size:11px;">—</div>
+            </div>
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px; font-family:var(--mono); font-size:11px;">
+              <div style="color:var(--dim); margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px;">Pixel Sample [0,0] RGBA</div>
+              <div id="fp-pixel" data-testid="fp-pixel" style="color:var(--accent); font-size:12px;">—</div>
+            </div>
+          </div>
+
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn" id="btn-fp-generate" data-testid="btn-fp-generate"
+                    style="background:#ffcc00; color:#000; font-weight:700; font-size:12px;">Generate Fingerprint</button>
+            <button class="btn btn-ghost" id="btn-fp-compare" data-testid="btn-fp-compare" style="font-size:12px;">Сравнить с предыдущим</button>
+          </div>
+        </div>
+
+        <div>
+          <!-- Полный fingerprint со всеми метриками -->
+          <div style="margin-bottom:12px; font-size:11px; color:var(--dim); font-family:var(--mono); text-transform:uppercase;">Полный Browser Fingerprint</div>
+          <div id="fp-full" data-testid="fp-full"
+               style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:12px; font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.9; min-height:200px;">
+            // Нажмите Generate для сбора отпечатка
+          </div>
+          <div style="margin-top:10px; font-size:11px; color:var(--dim); font-family:var(--mono);">
+            // Эти данные реальные — именно их отправляет ваш браузер
+          </div>
+        </div>
+      </div>
+
+      <!-- Второй canvas — WebGL fingerprint -->
+      <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
+        <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:12px; text-transform:uppercase;">WebGL Fingerprint</div>
+        <div class="grid-2">
+          <div>
+            <canvas id="fp-webgl-canvas" width="280" height="80"
+                    style="border:1px dashed rgba(255,200,0,.3); border-radius:5px; background:#050508;"
+                    data-testid="fp-webgl-canvas"></canvas>
+          </div>
+          <div id="fp-webgl-info" data-testid="fp-webgl-info"
+               style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:12px; font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.9;">
+            // WebGL инфо появится после Generate
+          </div>
+        </div>
+      </div>
+
+      <!-- Как это используется -->
+      <div style="margin-top:20px; padding:14px; background:rgba(255,200,0,.04); border:1px solid rgba(255,200,0,.15); border-radius:6px;">
+        <div style="font-family:var(--mono); font-size:11px; color:#ffcc00; margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px;">// Как сайты используют canvas fingerprint</div>
+        <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:2;">
+          1. Рисуют текст с эмодзи и спецсимволами (рендеринг шрифтов уникален)<br>
+          2. Рисуют градиент + фигуры (антиалиасинг зависит от GPU)<br>
+          3. toDataURL('image/png') → base64 строка<br>
+          4. Хэшируют строку → короткий fingerprint ID<br>
+          5. Сохраняют в localStorage / отправляют на сервер<br>
+          6. Сравнивают при каждом визите — если изменился, подозрение<br>
+          <span style="color:#ffcc00;">→ В ZennoPoster: каждый профиль должен иметь стабильный canvas fingerprint</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ZONE 14: BOT DETECTION
+  ═══════════════════════════════════════════════════════ -->
+  <section class="zone" id="antibot">
+    <div class="zone-header">
+      <span class="zone-label" style="color:var(--accent2); border-color:rgba(255,51,102,.3); background:rgba(255,51,102,.08);">Zone 14</span>
+      <span class="zone-title">// Bot Detection — как сайты обнаруживают ботов</span>
+    </div>
+    <div class="zone-body">
+      <p style="font-family:var(--mono); font-size:11px; color:var(--dim); margin-bottom:20px; line-height:1.8;">
+        // Каждая проверка ниже — это реальная техника детекции. Запускай и смотри что видит сайт о твоём браузере.
+      </p>
+
+      <div class="grid-2">
+
+        <!-- Колонка 1: Navigator checks -->
+        <div>
+          <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:10px; text-transform:uppercase;">Navigator / Window checks</div>
+
+          <div id="bot-checks-nav" data-testid="bot-checks-nav"
+               style="display:flex; flex-direction:column; gap:6px; font-family:var(--mono); font-size:12px;">
+            <!-- Заполняется JS -->
+            <div style="color:var(--dim);">// Нажми "Запустить проверки"</div>
+          </div>
+        </div>
+
+        <!-- Колонка 2: Behavioral checks -->
+        <div>
+          <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:10px; text-transform:uppercase;">Поведенческие сигналы</div>
+
+          <div style="display:flex; flex-direction:column; gap:6px; font-family:var(--mono); font-size:12px;">
+            <!-- Mouse movement tracker -->
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px;">
+              <div style="color:var(--dim); font-size:11px; margin-bottom:6px;">Mouse movement entropy</div>
+              <div id="bot-mouse-area" data-testid="bot-mouse-area"
+                   style="height:60px; border:1px dashed var(--border); border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--dim); font-size:11px; cursor:crosshair;">
+                Двигай мышь здесь
+              </div>
+              <div id="bot-mouse-stats" data-testid="bot-mouse-stats" style="color:var(--accent); margin-top:6px; font-size:11px;">events: 0 | unique points: 0</div>
+            </div>
+
+            <!-- Keyboard timing -->
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px;">
+              <div style="color:var(--dim); font-size:11px; margin-bottom:6px;">Keyboard timing (человек печатает неравномерно)</div>
+              <input type="text" id="bot-typing-input" data-testid="bot-typing-input"
+                     placeholder="Печатай сюда..." style="margin-bottom:6px;" />
+              <div id="bot-typing-stats" data-testid="bot-typing-stats" style="color:var(--accent); font-size:11px;">avg interval: — ms | variance: —</div>
+            </div>
+
+            <!-- Focus/blur timing -->
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px;">
+              <div style="color:var(--dim); font-size:11px; margin-bottom:6px;">Focus / Blur события</div>
+              <div id="bot-focus-log" data-testid="bot-focus-log" style="color:var(--dim); font-size:11px; min-height:40px;">// Переключайся между полями</div>
+            </div>
+
+            <!-- Scroll behavior -->
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:10px 12px;">
+              <div style="color:var(--dim); font-size:11px; margin-bottom:6px;">Scroll behavior</div>
+              <div id="bot-scroll-stats" data-testid="bot-scroll-stats" style="color:var(--accent); font-size:11px;">scroll events: 0 | smooth: ?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn" id="btn-bot-run" data-testid="btn-bot-run"
+                style="background:var(--accent2); color:#fff; font-size:12px;">Запустить проверки</button>
+        <button class="btn btn-ghost" id="btn-bot-reset" data-testid="btn-bot-reset" style="font-size:12px;">Сбросить</button>
+      </div>
+
+      <!-- Итоговый вердикт -->
+      <div id="bot-verdict" data-testid="bot-verdict"
+           style="display:none; margin-top:16px; padding:14px 18px; border-radius:6px; font-family:var(--mono); font-size:13px;">
+      </div>
+
+      <!-- Cloudflare Turnstile -->
+      <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+        <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:12px; text-transform:uppercase;">Cloudflare Turnstile (реальный виджет)</div>
+        <div class="grid-2">
+          <div>
+            <!-- Turnstile widget placeholder -->
+            <div id="turnstile-container" data-testid="turnstile-container"
+                 style="min-height:65px;">
+              <!-- Виджет рендерится скриптом Cloudflare -->
+              <div class="cf-turnstile"
+                   data-sitekey="1x00000000000000000000AA"
+                   data-theme="dark"
+                   data-callback="onTurnstileSuccess"
+                   data-error-callback="onTurnstileError"
+                   data-testid="turnstile-widget">
+              </div>
+            </div>
+            <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-top:8px; line-height:1.8;">
+              // Sitekey <code>1x00000000000000000000AA</code> — тестовый от Cloudflare.<br>
+              // Всегда проходит без реальной проверки. Для продакшна нужен свой sitekey.<br>
+              // Токен приходит в data-testid="turnstile-token"
+            </div>
+          </div>
+          <div>
+            <div style="background:#050508; border:1px solid var(--border); border-radius:5px; padding:12px; font-family:var(--mono); font-size:11px;">
+              <div style="color:var(--dim); margin-bottom:6px; text-transform:uppercase;">Turnstile Token</div>
+              <div id="turnstile-token" data-testid="turnstile-token" style="color:var(--accent); word-break:break-all; min-height:40px;">— ожидание прохождения виджета</div>
+              <div style="color:var(--dim); margin-top:10px; text-transform:uppercase; margin-bottom:4px;">Статус</div>
+              <div id="turnstile-status" data-testid="turnstile-status" style="color:var(--dim);">pending</div>
+            </div>
+            <div style="margin-top:10px; padding:10px; background:rgba(255,51,102,.06); border:1px solid rgba(255,51,102,.2); border-radius:5px; font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8;">
+              // Как Turnstile работает:<br>
+              1. Собирает browser signals (canvas, webgl, mouse, timing)<br>
+              2. Запускает JS challenge (proof of work)<br>
+              3. Возвращает подписанный токен<br>
+              4. Бэкенд проверяет токен через Cloudflare API<br>
+              <span style="color:var(--accent2);">→ Токен одноразовый и живёт 5 минут</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ZONE 15: ANTI-DEVTOOLS
+  ═══════════════════════════════════════════════════════ -->
+  <section class="zone" id="devtools">
+    <div class="zone-header">
+      <span class="zone-label" style="color:#ff6600; border-color:rgba(255,100,0,.3); background:rgba(255,100,0,.08);">Zone 15</span>
+      <span class="zone-title">// Anti-DevTools — техники обнаружения открытых инструментов разработчика</span>
+    </div>
+    <div class="zone-body">
+      <p style="font-family:var(--mono); font-size:11px; color:var(--dim); margin-bottom:20px; line-height:1.8;">
+        // Все техники ниже реально работают в браузере. Открой DevTools и наблюдай за реакцией страницы.
+      </p>
+
+      <!-- Статус DevTools -->
+      <div id="devtools-status-bar" data-testid="devtools-status-bar"
+           style="padding:12px 16px; border-radius:6px; font-family:var(--mono); font-size:13px; margin-bottom:20px; background:rgba(0,255,136,.08); border:1px solid rgba(0,255,136,.2); color:var(--accent);">
+        <span class="status-dot dot-green"></span>
+        <span id="devtools-status-text" data-testid="devtools-status-text">DevTools: не обнаружены</span>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:20px;">
+
+        <!-- Техника 1: window size -->
+        <div style="background:#050508; border:1px solid var(--border); border-radius:6px; padding:14px;">
+          <div style="font-family:var(--mono); font-size:11px; color:#ff6600; text-transform:uppercase; margin-bottom:8px; letter-spacing:.5px;">Техника 1 — Window Size</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; margin-bottom:10px;">
+            Когда DevTools открыты сбоку, window.outerWidth - window.innerWidth > 100.<br>
+            Когда открыты снизу, outerHeight - innerHeight > 100.
+          </div>
+          <pre style="font-size:10px; margin-bottom:8px;">outerWidth - innerWidth > 100
+outerHeight - innerHeight > 100</pre>
+          <div id="dt-size-result" data-testid="dt-size-result" style="font-family:var(--mono); font-size:12px; color:var(--dim);">
+            outer: <span id="dt-outer">—</span> | inner: <span id="dt-inner">—</span><br>
+            diff: <span id="dt-diff">—</span>
+          </div>
+        </div>
+
+        <!-- Техника 2: console.log timing -->
+        <div style="background:#050508; border:1px solid var(--border); border-radius:6px; padding:14px;">
+          <div style="font-family:var(--mono); font-size:11px; color:#ff6600; text-transform:uppercase; margin-bottom:8px; letter-spacing:.5px;">Техника 2 — console.log Timing</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; margin-bottom:10px;">
+            В открытом DevTools console.log выполняется медленнее из-за рендеринга.<br>
+            Замеряем время выполнения 1000 console.log вызовов.
+          </div>
+          <pre style="font-size:10px; margin-bottom:8px;">t0 = performance.now()
+console.log(obj) × 100
+t1 = performance.now()
+if (t1 - t0 > threshold) → devtools open</pre>
+          <div id="dt-console-result" data-testid="dt-console-result" style="font-family:var(--mono); font-size:12px; color:var(--dim);">— не запущено</div>
+          <button class="btn btn-ghost" id="btn-dt-console" data-testid="btn-dt-console" style="font-size:11px; margin-top:8px;">Замерить</button>
+        </div>
+
+        <!-- Техника 3: debugger timing -->
+        <div style="background:#050508; border:1px solid var(--border); border-radius:6px; padding:14px;">
+          <div style="font-family:var(--mono); font-size:11px; color:#ff6600; text-transform:uppercase; margin-bottom:8px; letter-spacing:.5px;">Техника 3 — debugger; Timing</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; margin-bottom:10px;">
+            Инструкция <code>debugger;</code> останавливает выполнение только если DevTools открыты.<br>
+            Замеряем время — если > ~10ms, DevTools активны.
+          </div>
+          <pre style="font-size:10px; margin-bottom:8px;">t0 = Date.now()
+debugger;
+t1 = Date.now()
+if (t1 - t0 > 10) → devtools open</pre>
+          <div id="dt-debugger-result" data-testid="dt-debugger-result" style="font-family:var(--mono); font-size:12px; color:var(--dim);">— не запущено</div>
+          <button class="btn btn-ghost" id="btn-dt-debugger" data-testid="btn-dt-debugger" style="font-size:11px; margin-top:8px;">Проверить</button>
+        </div>
+
+        <!-- Техника 4: toString override -->
+        <div style="background:#050508; border:1px solid var(--border); border-radius:6px; padding:14px;">
+          <div style="font-family:var(--mono); font-size:11px; color:#ff6600; text-transform:uppercase; margin-bottom:8px; letter-spacing:.5px;">Техника 4 — Object toString (getter trick)</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; margin-bottom:10px;">
+            DevTools вызывает <code>toString()</code> на объектах при их отображении.<br>
+            Если создать объект с getter на toString — он сработает только в консоли.
+          </div>
+          <pre style="font-size:10px; margin-bottom:8px;">const x = {
+  get toString() {
+    devToolsDetected = true
+    return () => 'object'
+  }
+}
+console.log(x) // → срабатывает getter</pre>
+          <div id="dt-tostring-result" data-testid="dt-tostring-result" style="font-family:var(--mono); font-size:12px; color:var(--dim);">— открой консоль и посмотри</div>
+        </div>
+
+        <!-- Техника 5: CSS detection -->
+        <div style="background:#050508; border:1px solid var(--border); border-radius:6px; padding:14px;">
+          <div style="font-family:var(--mono); font-size:11px; color:#ff6600; text-transform:uppercase; margin-bottom:8px; letter-spacing:.5px;">Техника 5 — CSS / Element Inspector</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; margin-bottom:10px;">
+            Когда элемент выбран в Inspector, браузер может изменить его computed стили.<br>
+            Также: firebug-specific CSS свойства, vendor prefixes.
+          </div>
+          <div id="dt-css-target" data-testid="dt-css-target"
+               style="padding:8px 12px; border:1px solid var(--border); border-radius:4px; font-family:var(--mono); font-size:11px; color:var(--dim);">
+            Выбери этот элемент в Inspector → результат изменится
+          </div>
+          <div id="dt-css-result" data-testid="dt-css-result" style="font-family:var(--mono); font-size:12px; color:var(--dim); margin-top:8px;">— мониторинг активен</div>
+        </div>
+
+        <!-- Техника 6: Function.toString native check -->
+        <div style="background:#050508; border:1px solid var(--border); border-radius:6px; padding:14px;">
+          <div style="font-family:var(--mono); font-size:11px; color:#ff6600; text-transform:uppercase; margin-bottom:8px; letter-spacing:.5px;">Техника 6 — Native Function Check (Anti-Automation)</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; margin-bottom:10px;">
+            Автоматизация часто перезаписывает нативные функции (navigator.webdriver и др.).<br>
+            Проверяем через Function.prototype.toString — у нативных функций вывод содержит [native code].
+          </div>
+          <div id="dt-native-result" data-testid="dt-native-result" style="font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8;">— нажми Проверить</div>
+          <button class="btn btn-ghost" id="btn-dt-native" data-testid="btn-dt-native" style="font-size:11px; margin-top:8px;">Проверить native functions</button>
+        </div>
+      </div>
+
+      <!-- Защита контента при открытых DevTools -->
+      <div style="border-top:1px solid var(--border); padding-top:20px;">
+        <div style="font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:12px; text-transform:uppercase;">Реакция на открытые DevTools</div>
+        <div class="grid-2">
+          <div>
+            <div style="font-family:var(--mono); font-size:11px; color:var(--dim); margin-bottom:10px; line-height:1.8;">
+              Когда DetTools обнаружены, сайты могут:<br>
+              • Показать предупреждение<br>
+              • Скрыть контент<br>
+              • Перенаправить на другую страницу<br>
+              • Сбросить сессию / выйти<br>
+              • Отправить сигнал на сервер
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-ghost" id="btn-dt-warn" data-testid="btn-dt-warn" style="font-size:11px;">Показать предупреждение</button>
+              <button class="btn btn-ghost" id="btn-dt-hide" data-testid="btn-dt-hide" style="font-size:11px;">Скрыть контент</button>
+              <button class="btn btn-ghost" id="btn-dt-clear" data-testid="btn-dt-clear" style="font-size:11px;">Сбросить</button>
+            </div>
+          </div>
+          <div>
+            <div id="dt-protected-content" data-testid="dt-protected-content"
+                 style="padding:16px; background:rgba(0,255,136,.06); border:1px solid rgba(0,255,136,.2); border-radius:6px; font-family:var(--mono); font-size:12px; color:var(--accent); min-height:80px;">
+              🔓 Защищённый контент — виден пока DevTools закрыты<br>
+              <span style="color:var(--dim); font-size:11px;">SECRET_DATA: {"user":"admin","token":"eyJhbGc..."}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<footer>
+  autoZ3N SANDBOX v1.2 · by <a href="https://github.com/w3bgr3p">w3bgr3p</a> with ❤️
+</footer>
+
+<!-- Cloudflare Turnstile SDK -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<script>
+
+  // ─── ORIGINAL ZONE SCRIPTS (Zones 1-12) ─────────────────────────────────
+
+  // Event log
+  var logEl = document.getElementById('event-log');
+  document.getElementById('btn-clear-log').addEventListener('click', function() {
+    logEl.innerHTML = '<div>// Лог очищен</div>';
+  });
+  document.body.addEventListener('click', function(e) {
+    var el = e.target; if (el.tagName === 'BODY' || el === logEl) return;
+    var id = el.id ? '#' + el.id : el.tagName.toLowerCase();
+    var dt = el.dataset.testid ? ' [data-testid=' + el.dataset.testid + ']' : '';
+    addLog('click → ' + id + dt);
+  }, true);
+  document.body.addEventListener('change', function(e) {
+    var el = e.target; var id = el.id ? '#' + el.id : el.tagName.toLowerCase();
+    var val = el.type === 'password' ? '***' : (el.value || '').slice(0,30);
+    addLog('change → ' + id + ' = "' + val + '"');
+  }, true);
+
+  // Range
+  var rangeEl = document.getElementById('input-range');
+  var rangeOut = document.getElementById('range-output');
+  if (rangeEl) rangeEl.addEventListener('input', function() { rangeOut.textContent = this.value; });
+
+  // Counter
+  var counterVal = 0;
+  document.getElementById('btn-increment').addEventListener('click', function() { counterVal++; document.getElementById('counter-value').textContent = counterVal; });
+  document.getElementById('btn-decrement').addEventListener('click', function() { counterVal--; document.getElementById('counter-value').textContent = counterVal; });
+
+  // Dialog
+  var dialogEl = document.getElementById('main-dialog');
+  document.getElementById('btn-dialog-open').addEventListener('click', function() { dialogEl.showModal(); });
+  document.getElementById('btn-dialog-close').addEventListener('click', function() { dialogEl.close(); });
+  document.getElementById('btn-dialog-confirm').addEventListener('click', function() { addLog('dialog confirmed: ' + document.getElementById('dialog-input').value); dialogEl.close(); });
+
+  // Delayed element
+  document.getElementById('btn-toggle-delayed').addEventListener('click', function() {
+    var el = document.getElementById('delayed-element'); el.style.display = 'none';
+    addLog('delayed-element скрыт, появится через 2 сек...');
+    setTimeout(function() { el.style.display = 'block'; addLog('delayed-element появился!'); }, 2000);
+  });
+
+  // Dynamic DOM
+  var dynCount = 0;
+  var dynTarget = document.getElementById('dynamic-target');
+  document.getElementById('btn-add-dynamic').addEventListener('click', function() {
+    dynCount++;
+    var el = document.createElement('div');
+    el.style.cssText = 'margin:4px 0;padding:6px 10px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);border-radius:4px;font-family:monospace;font-size:12px;color:#00ff88;';
+    el.id = 'dynamic-el-' + dynCount; el.setAttribute('data-testid', 'dynamic-el-' + dynCount);
+    el.textContent = '→ Добавлен элемент #' + dynCount;
+    dynTarget.textContent = ''; dynTarget.appendChild(el);
+    addLog('Добавлен #dynamic-el-' + dynCount);
+  });
+  document.getElementById('btn-remove-dynamic').addEventListener('click', function() {
+    if (!dynCount) return;
+    var el = document.getElementById('dynamic-el-' + dynCount);
+    if (el) { el.parentNode.removeChild(el); addLog('Удалён #dynamic-el-' + dynCount); }
+    dynCount--;
+    if (!dynCount) dynTarget.textContent = '// Здесь появятся динамические элементы';
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      var panel = document.getElementById(btn.dataset.tab);
+      if (panel) panel.classList.add('active');
+    });
+  });
+
+  // Pagination
+  document.querySelectorAll('.page-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var page = btn.dataset.page;
+      if (page === 'prev' || page === 'next') { addLog('pagination: ' + page); return; }
+      document.querySelectorAll('.page-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active'); addLog('pagination: page ' + page);
+    });
+  });
+
+  // Autocomplete
+  var acInput = document.getElementById('input-autocomplete');
+  var acList = document.getElementById('autocomplete-list');
+  acInput.addEventListener('input', function() {
+    var val = this.value.toLowerCase();
+    acList.style.display = val.length > 0 ? 'block' : 'none';
+    acList.querySelectorAll('div').forEach(function(item) { item.style.display = item.textContent.toLowerCase().indexOf(val) > -1 ? 'block' : 'none'; });
+  });
+  acList.querySelectorAll('div').forEach(function(item) {
+    item.addEventListener('click', function() { acInput.value = item.textContent; acList.style.display = 'none'; addLog('autocomplete: ' + item.dataset.value); });
+  });
+  document.addEventListener('click', function(e) { if (e.target !== acInput) acList.style.display = 'none'; });
+
+  // Infinite scroll
+  var infList = document.getElementById('infinite-list');
+  var infCount = 5;
+  infList.addEventListener('scroll', function() {
+    if (this.scrollTop + this.clientHeight >= this.scrollHeight - 5) {
+      for (var i = 1; i <= 3; i++) {
+        infCount++;
+        var item = document.createElement('div'); item.className = 'list-item';
+        item.setAttribute('data-id', infCount); item.setAttribute('data-testid', 'list-item-' + infCount);
+        item.textContent = 'Элемент #' + infCount + ' (подгружен)'; infList.appendChild(item);
+      }
+      addLog('infinite-scroll: подгружено до #' + infCount);
+    }
+  });
+
+  // Drag and Drop
+  document.querySelectorAll('.drag-item').forEach(function(item) { item.addEventListener('dragstart', function(e) { e.dataTransfer.setData('text/plain', item.id); }); });
+  var dropZoneEl = document.getElementById('drop-zone');
+  dropZoneEl.addEventListener('dragover', function(e) { e.preventDefault(); dropZoneEl.classList.add('over'); });
+  dropZoneEl.addEventListener('dragleave', function() { dropZoneEl.classList.remove('over'); });
+  dropZoneEl.addEventListener('drop', function(e) { e.preventDefault(); dropZoneEl.classList.remove('over'); var id = e.dataTransfer.getData('text/plain'); addLog('dropped: #' + id); dropZoneEl.textContent = '✓ Дропнут: ' + id; });
+
+  // Indeterminate checkbox
+  var cbIndet = document.getElementById('cb-indeterminate'); if (cbIndet) cbIndet.indeterminate = true;
+
+  // Canvas
+  var mainCanvas = document.getElementById('main-canvas');
+  var ctx = mainCanvas.getContext('2d');
+  var canvasBtn = { x: 0, y: 0, w: 140, h: 44 };
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) { this.beginPath(); this.moveTo(x+r,y); this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r); this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h); this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r); this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y); this.closePath(); };
+  }
+  function drawCanvas() {
+    ctx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+    ctx.strokeStyle='rgba(30,30,46,0.8)'; ctx.lineWidth=1;
+    for(var gx=0;gx<mainCanvas.width;gx+=20){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,mainCanvas.height);ctx.stroke();}
+    for(var gy=0;gy<mainCanvas.height;gy+=20){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(mainCanvas.width,gy);ctx.stroke();}
+    canvasBtn.x=Math.floor(Math.random()*(mainCanvas.width-canvasBtn.w-40))+20;
+    canvasBtn.y=Math.floor(Math.random()*(mainCanvas.height-canvasBtn.h-40))+20;
+    ctx.shadowColor='#00ff88'; ctx.shadowBlur=16;
+    ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.roundRect(canvasBtn.x,canvasBtn.y,canvasBtn.w,canvasBtn.h,6); ctx.fill();
+    ctx.shadowBlur=0; ctx.fillStyle='#000'; ctx.font='bold 13px "JetBrains Mono",monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('НАЖМИ МЕНЯ',canvasBtn.x+canvasBtn.w/2,canvasBtn.y+canvasBtn.h/2);
+    ctx.fillStyle='rgba(74,74,106,0.9)'; ctx.font='11px "JetBrains Mono",monospace'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('// Найди кнопку и кликни в неё',10,10);
+    document.getElementById('canvas-status').textContent='// Кнопка · Центр: x='+(canvasBtn.x+canvasBtn.w/2|0)+', y='+(canvasBtn.y+canvasBtn.h/2|0)+' · ['+canvasBtn.x+','+canvasBtn.y+'] - ['+(canvasBtn.x+canvasBtn.w)+','+(canvasBtn.y+canvasBtn.h)+']';
+  }
+  mainCanvas.addEventListener('click', function(e) {
+    var rect=mainCanvas.getBoundingClientRect(); var scaleX=mainCanvas.width/rect.width; var scaleY=mainCanvas.height/rect.height;
+    var cx=(e.clientX-rect.left)*scaleX; var cy=(e.clientY-rect.top)*scaleY;
+    var hit=cx>=canvasBtn.x&&cx<=canvasBtn.x+canvasBtn.w&&cy>=canvasBtn.y&&cy<=canvasBtn.y+canvasBtn.h;
+    if(hit){ctx.clearRect(0,0,mainCanvas.width,mainCanvas.height);ctx.fillStyle='rgba(0,255,136,0.08)';ctx.fillRect(0,0,mainCanvas.width,mainCanvas.height);ctx.fillStyle='#00ff88';ctx.font='bold 20px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✓ ПОПАЛ! x='+(cx|0)+', y='+(cy|0),mainCanvas.width/2,mainCanvas.height/2);addLog('canvas HIT! x='+(cx|0)+' y='+(cy|0));}
+    else{ctx.fillStyle='rgba(255,51,102,0.15)';ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fill();addLog('canvas MISS x='+(cx|0)+' y='+(cy|0));}
+  });
+  document.getElementById('btn-redraw-canvas').addEventListener('click', function() { drawCanvas(); addLog('canvas перерисован'); });
+  drawCanvas();
+
+  // Shadow DOM Open
+  (function() {
+    var host = document.getElementById('shadow-host-open');
+    var root = host.attachShadow({ mode: 'open' });
+    root.innerHTML = '<style>*{box-sizing:border-box;}.si{padding:16px;background:#0a0a10;border-radius:6px;}label{display:block;font-family:monospace;font-size:11px;color:#3366ff;text-transform:uppercase;margin-bottom:6px;}input{background:#050508;border:1px solid #1e1e2e;color:#c8c8d8;font-family:monospace;font-size:13px;padding:7px 10px;border-radius:5px;width:100%;outline:none;margin-bottom:10px;}input:focus{border-color:#3366ff;}button{background:#3366ff;color:#fff;border:none;padding:8px 18px;border-radius:5px;font-family:monospace;font-size:12px;cursor:pointer;}p{font-family:monospace;font-size:11px;color:#4a4a6a;margin-bottom:12px;}</style><div class="si"><p>// Внутри shadow root (open). element.shadowRoot доступен.</p><label>shadow-input (open)</label><input type="text" id="shadow-open-input" placeholder="Поле в shadow DOM" data-testid="shadow-open-input"/><input type="email" id="shadow-open-email" placeholder="Email в shadow DOM" data-testid="shadow-open-email"/><button id="shadow-open-btn" data-testid="shadow-open-btn">Кнопка в shadow (open)</button></div>';
+    root.querySelector('#shadow-open-btn').addEventListener('click', function() { addLog('shadow-open-btn clicked!'); this.textContent='✓ Нажато!'; });
+  })();
+
+  // Shadow DOM Closed
+  (function() {
+    var host = document.getElementById('shadow-host-closed');
+    var closedRoot = host.attachShadow({ mode: 'closed' });
+    closedRoot.innerHTML = '<style>*{box-sizing:border-box;}.si{padding:16px;background:#0a0a10;border-radius:6px;}label{display:block;font-family:monospace;font-size:11px;color:#ff3366;text-transform:uppercase;margin-bottom:6px;}input{background:#050508;border:1px solid #1e1e2e;color:#c8c8d8;font-family:monospace;font-size:13px;padding:7px 10px;border-radius:5px;width:100%;outline:none;margin-bottom:10px;}input:focus{border-color:#ff3366;}button{background:#ff3366;color:#fff;border:none;padding:8px 18px;border-radius:5px;font-family:monospace;font-size:12px;cursor:pointer;}p{font-family:monospace;font-size:11px;color:#4a4a6a;margin-bottom:12px;}.w{color:#ff3366;font-size:11px;font-family:monospace;margin-top:6px;}</style><div class="si"><p>// host.shadowRoot === null. window.__closedShadowRoot — ссылка сохранена.</p><label>shadow-input (closed)</label><input type="text" id="shadow-closed-input" placeholder="Поле в closed shadow DOM" data-testid="shadow-closed-input"/><input type="password" id="shadow-closed-pass" placeholder="Пароль в closed shadow DOM" data-testid="shadow-closed-pass"/><button id="shadow-closed-btn" data-testid="shadow-closed-btn">Кнопка в shadow (closed)</button><div class="w">⚠ element.shadowRoot === null</div></div>';
+    window.__closedShadowRoot = closedRoot;
+    closedRoot.querySelector('#shadow-closed-btn').addEventListener('click', function() { addLog('shadow-closed-btn clicked!'); this.textContent='✓ Нажато!'; });
+  })();
+
+  // Web3
+  var web3Address = null;
+  document.getElementById('btn-web3-check').addEventListener('click', function() {
+    var noW = document.getElementById('web3-no-wallet');
+    if (typeof window.ethereum !== 'undefined') {
+      document.getElementById('web3-status').textContent = 'window.ethereum найден · ' + (window.ethereum.isMetaMask ? 'MetaMask' : 'Unknown');
+      document.getElementById('web3-status').style.color='#00ff88'; noW.style.display='none'; addLog('web3: ethereum найден');
+    } else { document.getElementById('web3-status').textContent='window.ethereum не найден'; document.getElementById('web3-status').style.color='#ff3366'; noW.style.display='block'; addLog('web3: ethereum отсутствует'); }
+  });
+  document.getElementById('btn-web3-connect').addEventListener('click', async function() {
+    if (typeof window.ethereum==='undefined') { document.getElementById('web3-no-wallet').style.display='block'; return; }
+    try {
+      document.getElementById('web3-status').textContent='Ожидание...'; document.getElementById('web3-status').style.color='#ffcc00';
+      addLog('web3: запрос eth_requestAccounts...');
+      var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      web3Address = accounts[0];
+      document.getElementById('web3-address').textContent = web3Address;
+      document.getElementById('web3-status').textContent='подключён'; document.getElementById('web3-status').style.color='#00ff88';
+      document.getElementById('btn-web3-sign').disabled=false; addLog('web3: подключён · '+web3Address);
+    } catch(e) { document.getElementById('web3-status').textContent='отклонено'; document.getElementById('web3-status').style.color='#ff3366'; addLog('web3: отклонён'); }
+  });
+  document.getElementById('btn-web3-sign').addEventListener('click', async function() {
+    if (!web3Address) return;
+    var message = document.getElementById('web3-message-input').value || 'ZP Sandbox auth';
+    try {
+      document.getElementById('web3-status').textContent='Ожидание подписи...'; document.getElementById('web3-status').style.color='#ffcc00';
+      var signature = await window.ethereum.request({ method: 'personal_sign', params: [message, web3Address] });
+      document.getElementById('web3-signature').textContent=signature;
+      document.getElementById('web3-status').textContent='подписано'; document.getElementById('web3-status').style.color='#00ff88';
+      addLog('web3: подпись · '+signature.slice(0,20)+'...');
+    } catch(e) { document.getElementById('web3-status').textContent='отклонено'; document.getElementById('web3-status').style.color='#ff3366'; }
+  });
+
+  // Aria live region update
+  setInterval(function() { var el=document.getElementById('aria-alert'); if(el){el.textContent='[aria-live] '+new Date().toTimeString().slice(0,8);} }, 5000);
+
+
+  // ═══════════════════════════════════════════════════════
+  // ZONE 13: CANVAS FINGERPRINTING
+  // ═══════════════════════════════════════════════════════
+
+  var lastFpHash = null;
+
+  // Простой быстрый хэш (djb2) — то что реально используют многие скрипты
+  function hashString(str) {
+    var hash = 5381;
+    for (var i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    // Переводим в hex
+    return (hash >>> 0).toString(16).padStart(8, '0');
+  }
+
+  // Более длинный хэш — конкатенируем несколько djb2 с разными seeds
+  function fingerprintHash(str) {
+    var h1 = hashString(str);
+    var h2 = hashString(str.split('').reverse().join(''));
+    var h3 = hashString(str.slice(0, str.length/2));
+    var h4 = hashString(str.slice(str.length/2));
+    return h1 + h2 + h3 + h4;
+  }
+
+  function generateCanvasFingerprint() {
+    var canvas = document.getElementById('fp-canvas-hidden');
+    var ctx = canvas.getContext('2d');
+
+    // Именно такой набор используют реальные fingerprint библиотеки:
+    // Текст с emoji, символами разных языков, математическими знаками
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Фоновый градиент
+    var grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    grad.addColorStop(0, 'rgba(255,0,0,0.1)');
+    grad.addColorStop(0.5, 'rgba(0,255,0,0.1)');
+    grad.addColorStop(1, 'rgba(0,0,255,0.1)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Текст — именно рендеринг шрифтов создаёт уникальность
+    ctx.fillStyle = '#ff6600';
+    ctx.font = '11px Arial';
+    ctx.fillText('Cwm fjordbank glyphs vext quiz \ud83d\ude00', 4, 16);
+
+    ctx.fillStyle = '#00aaff';
+    ctx.font = 'bold 11px "Times New Roman"';
+    ctx.fillText('\u00e9\u00e0\u00fc\u00f1\u4e2d\u6587\u0440\u0443\u0441 \u221e\u2208\u2211', 4, 34);
+
+    // Фигуры с разным anti-aliasing
+    ctx.strokeStyle = 'rgba(0,255,136,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(240, 30, 20, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,51,102,0.6)';
+    ctx.beginPath();
+    ctx.arc(250, 30, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Получаем данные
+    var dataURL = canvas.toDataURL('image/png');
+    var hash = fingerprintHash(dataURL);
+
+    // Образец пикселя [0,0]
+    var pixel = ctx.getImageData(0, 0, 1, 1).data;
+
+    document.getElementById('fp-hash').textContent = hash;
+    document.getElementById('fp-dataurl').textContent = dataURL.substring(0, 80) + '...';
+    document.getElementById('fp-pixel').textContent =
+            'r=' + pixel[0] + ' g=' + pixel[1] + ' b=' + pixel[2] + ' a=' + pixel[3];
+
+    return { hash: hash, dataURL: dataURL };
+  }
+
+  function generateWebGLFingerprint() {
+    var canvas = document.getElementById('fp-webgl-canvas');
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    var infoEl = document.getElementById('fp-webgl-info');
+
+    if (!gl) {
+      infoEl.textContent = '// WebGL не поддерживается';
+      return;
+    }
+
+    // Рисуем треугольник
+    var vertices = new Float32Array([0, 0.8, -0.8, -0.8, 0.8, -0.8]);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    var vsrc = 'attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}';
+    var fsrc = 'precision mediump float;void main(){gl_FragColor=vec4(0.,1.,.5,1.);}';
+
+    var vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, vsrc); gl.compileShader(vs);
+    var fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, fsrc); gl.compileShader(fs);
+
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.linkProgram(prog); gl.useProgram(prog);
+
+    var loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.clearColor(0.03, 0.03, 0.06, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Собираем WebGL info — это основные fingerprint данные
+    var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    var vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+    var renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+
+    infoEl.innerHTML = [
+      '<span style="color:var(--dim)">Vendor:</span> <span style="color:#ffcc00">' + vendor + '</span>',
+      '<span style="color:var(--dim)">Renderer:</span> <span style="color:#ffcc00">' + renderer + '</span>',
+      '<span style="color:var(--dim)">Version:</span> ' + gl.getParameter(gl.VERSION),
+      '<span style="color:var(--dim)">GLSL:</span> ' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+      '<span style="color:var(--dim)">Max tex size:</span> ' + gl.getParameter(gl.MAX_TEXTURE_SIZE),
+      '<span style="color:var(--dim)">Extensions:</span> ' + gl.getSupportedExtensions().length + ' шт',
+    ].join('<br>');
+  }
+
+  function generateFullFingerprint() {
+    var fp = generateCanvasFingerprint();
+    generateWebGLFingerprint();
+
+    // Собираем полный fingerprint
+    var nav = navigator;
+    var sc = window.screen;
+    var lines = [
+      '<span style="color:var(--accent)">// Canvas Hash</span>',
+      'hash: <span style="color:#ffcc00">' + fp.hash + '</span>',
+      '',
+      '<span style="color:var(--accent)">// Navigator</span>',
+      'userAgent: <span style="color:var(--text)">' + nav.userAgent.slice(0,60) + '...</span>',
+      'language: ' + nav.language,
+      'languages: ' + (nav.languages || []).join(', '),
+      'platform: ' + nav.platform,
+      'hardwareConcurrency: <span style="color:#ffcc00">' + nav.hardwareConcurrency + '</span>',
+      'deviceMemory: <span style="color:#ffcc00">' + (nav.deviceMemory || '?') + ' GB</span>',
+      'cookieEnabled: ' + nav.cookieEnabled,
+      'doNotTrack: ' + nav.doNotTrack,
+      'webdriver: <span style="color:' + (nav.webdriver ? 'var(--accent2)' : 'var(--accent)') + '">' + nav.webdriver + '</span>',
+      '',
+      '<span style="color:var(--accent)">// Screen</span>',
+      'resolution: <span style="color:#ffcc00">' + sc.width + 'x' + sc.height + '</span>',
+      'colorDepth: ' + sc.colorDepth + ' bit',
+      'pixelRatio: ' + window.devicePixelRatio,
+      'availResolution: ' + sc.availWidth + 'x' + sc.availHeight,
+      '',
+      '<span style="color:var(--accent)">// Timezone & Time</span>',
+      'timezone: <span style="color:#ffcc00">' + Intl.DateTimeFormat().resolvedOptions().timeZone + '</span>',
+      'offset: UTC' + (-new Date().getTimezoneOffset()/60),
+      '',
+      '<span style="color:var(--accent)">// Plugins</span>',
+      'count: ' + nav.plugins.length,
+      '',
+      '<span style="color:var(--accent)">// Touch</span>',
+      'maxTouchPoints: ' + nav.maxTouchPoints,
+      'touchEvent: ' + ('ontouchstart' in window),
+    ];
+
+    document.getElementById('fp-full').innerHTML = lines.join('<br>');
+
+    lastFpHash = fp.hash;
+    addLog('fingerprint generated: ' + fp.hash);
+  }
+
+  document.getElementById('btn-fp-generate').addEventListener('click', generateFullFingerprint);
+
+  document.getElementById('btn-fp-compare').addEventListener('click', function() {
+    if (!lastFpHash) { addLog('fp: сначала сгенерируй fingerprint'); return; }
+    var fp = generateCanvasFingerprint();
+    var match = fp.hash === lastFpHash;
+    document.getElementById('fp-hash').style.color = match ? '#00ff88' : '#ff3366';
+    addLog('fp compare: ' + (match ? 'MATCH ✓ (стабильный fingerprint)' : 'CHANGED ✗ hash: ' + fp.hash));
+  });
+
+
+  // ═══════════════════════════════════════════════════════
+  // ZONE 14: BOT DETECTION
+  // ═══════════════════════════════════════════════════════
+
+  // Turnstile callbacks (глобальные, вызываются SDK)
+  window.onTurnstileSuccess = function(token) {
+    document.getElementById('turnstile-token').textContent = token;
+    document.getElementById('turnstile-status').textContent = '✓ Пройдено';
+    document.getElementById('turnstile-status').style.color = '#00ff88';
+    addLog('turnstile: success, token=' + token.slice(0,20) + '...');
+  };
+  window.onTurnstileError = function() {
+    document.getElementById('turnstile-status').textContent = '✗ Ошибка';
+    document.getElementById('turnstile-status').style.color = '#ff3366';
+    addLog('turnstile: error');
+  };
+
+  // Navigator / window checks
+  function runBotChecks() {
+    var nav = navigator;
+    var checks = [
+      {
+        name: 'navigator.webdriver',
+        // Главный флаг автоматизации — selenium/playwright/puppeteer ставят true
+        val: nav.webdriver,
+        bot: nav.webdriver === true,
+        desc: 'Selenium/Playwright/Puppeteer ставят true'
+      },
+      {
+        name: 'navigator.plugins.length',
+        val: nav.plugins.length,
+        // У реального браузера обычно > 0, у headless = 0
+        bot: nav.plugins.length === 0,
+        desc: 'У headless браузеров обычно 0'
+      },
+      {
+        name: 'navigator.languages',
+        val: JSON.stringify(nav.languages),
+        bot: !nav.languages || nav.languages.length === 0,
+        desc: 'У ботов часто пустой или ["en"]'
+      },
+      {
+        name: 'navigator.hardwareConcurrency',
+        val: nav.hardwareConcurrency,
+        bot: nav.hardwareConcurrency === 0 || nav.hardwareConcurrency === undefined,
+        desc: 'У реальных машин > 0'
+      },
+      {
+        name: 'window.chrome',
+        val: typeof window.chrome,
+        // В headless Chrome до недавнего времени не было window.chrome
+        bot: typeof window.chrome === 'undefined' && nav.userAgent.indexOf('Chrome') > -1,
+        desc: 'В реальном Chrome всегда есть window.chrome'
+      },
+      {
+        name: 'Notification.permission',
+        val: typeof Notification !== 'undefined' ? Notification.permission : 'N/A',
+        bot: false,
+        desc: 'У ботов часто "denied" без запроса'
+      },
+      {
+        name: 'screen.colorDepth',
+        val: window.screen.colorDepth,
+        bot: window.screen.colorDepth < 24,
+        desc: 'У реальных экранов 24 или 32'
+      },
+      {
+        name: 'window.outerWidth',
+        val: window.outerWidth + ' (inner: ' + window.innerWidth + ')',
+        bot: window.outerWidth === 0,
+        desc: 'В headless outerWidth может быть 0'
+      },
+      {
+        name: 'Performance timing',
+        val: typeof performance.timing !== 'undefined' ? 'present' : 'absent',
+        bot: typeof performance.timing === 'undefined',
+        desc: 'Должен быть у реального браузера'
+      },
+      {
+        name: 'navigator.connection',
+        val: navigator.connection ? navigator.connection.effectiveType || 'present' : 'absent',
+        bot: false,
+        desc: 'У мобильных/VPN может отличаться'
+      },
+    ];
+
+    var container = document.getElementById('bot-checks-nav');
+    container.innerHTML = '';
+
+    var botScore = 0;
+    checks.forEach(function(check) {
+      if (check.bot) botScore++;
+      var div = document.createElement('div');
+      div.style.cssText = 'background:#050508; border:1px solid ' + (check.bot ? 'rgba(255,51,102,.3)' : 'rgba(0,255,136,.15)') + '; border-radius:4px; padding:7px 10px;';
+      div.setAttribute('data-testid', 'bot-check-' + check.name.replace(/[^a-z0-9]/gi, '-'));
+      div.innerHTML =
+              '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+              '<span style="color:var(--dim); font-size:10px;">' + check.name + '</span>' +
+              '<span style="color:' + (check.bot ? 'var(--accent2)' : 'var(--accent)') + '; font-size:10px;">' +
+              (check.bot ? '⚠ BOT?' : '✓ OK') +
+              '</span>' +
+              '</div>' +
+              '<div style="color:var(--text); font-size:11px; margin-top:2px;">' + check.val + '</div>' +
+              '<div style="color:var(--dim); font-size:10px;">' + check.desc + '</div>';
+      container.appendChild(div);
+    });
+
+    // Вердикт
+    var verdict = document.getElementById('bot-verdict');
+    verdict.style.display = 'block';
+    if (botScore === 0) {
+      verdict.style.background = 'rgba(0,255,136,.08)';
+      verdict.style.border = '1px solid rgba(0,255,136,.3)';
+      verdict.style.color = '#00ff88';
+      verdict.innerHTML = '✓ Bot score: 0/' + checks.length + ' — Выглядишь как человек';
+    } else if (botScore <= 2) {
+      verdict.style.background = 'rgba(255,200,0,.08)';
+      verdict.style.border = '1px solid rgba(255,200,0,.3)';
+      verdict.style.color = '#ffcc00';
+      verdict.innerHTML = '⚠ Bot score: ' + botScore + '/' + checks.length + ' — Подозрительно';
+    } else {
+      verdict.style.background = 'rgba(255,51,102,.08)';
+      verdict.style.border = '1px solid rgba(255,51,102,.3)';
+      verdict.style.color = '#ff3366';
+      verdict.innerHTML = '✗ Bot score: ' + botScore + '/' + checks.length + ' — Высокая вероятность бота';
+    }
+
+    addLog('bot-detection: score=' + botScore + '/' + checks.length);
+  }
+
+  // Мышь — энтропия движения
+  var mousePoints = [];
+  var mouseArea = document.getElementById('bot-mouse-area');
+  mouseArea.addEventListener('mousemove', function(e) {
+    var rect = mouseArea.getBoundingClientRect();
+    mousePoints.push({ x: Math.round(e.clientX - rect.left), y: Math.round(e.clientY - rect.top) });
+    // Уникальные точки — боты часто двигаются по прямой
+    var unique = new Set(mousePoints.map(function(p) { return p.x + ',' + p.y; })).size;
+    document.getElementById('bot-mouse-stats').textContent =
+            'events: ' + mousePoints.length + ' | unique points: ' + unique + ' | entropy: ' + (unique / mousePoints.length).toFixed(2);
+  });
+
+  // Клавиатура — интервалы
+  var typingTimestamps = [];
+  var typingInput = document.getElementById('bot-typing-input');
+  typingInput.addEventListener('keydown', function() {
+    typingTimestamps.push(performance.now());
+    if (typingTimestamps.length > 1) {
+      var intervals = [];
+      for (var i = 1; i < typingTimestamps.length; i++) {
+        intervals.push(typingTimestamps[i] - typingTimestamps[i-1]);
+      }
+      var avg = intervals.reduce(function(a,b){return a+b;},0) / intervals.length;
+      var variance = intervals.reduce(function(a,b){return a+Math.pow(b-avg,2);},0) / intervals.length;
+      document.getElementById('bot-typing-stats').textContent =
+              'avg interval: ' + avg.toFixed(0) + ' ms | variance: ' + variance.toFixed(0) + ' | samples: ' + intervals.length;
+    }
+  });
+
+  // Focus/blur
+  var focusLog = document.getElementById('bot-focus-log');
+  var focusEvents = [];
+  document.addEventListener('focusin', function(e) {
+    if (e.target.closest && e.target.closest('#antibot')) {
+      var ts = new Date().toTimeString().slice(0,8);
+      focusEvents.push('[' + ts + '] focus → ' + (e.target.id || e.target.tagName));
+      focusLog.innerHTML = focusEvents.slice(-4).join('<br>');
+    }
+  });
+  document.addEventListener('focusout', function(e) {
+    if (e.target.closest && e.target.closest('#antibot')) {
+      var ts = new Date().toTimeString().slice(0,8);
+      focusEvents.push('[' + ts + '] blur ← ' + (e.target.id || e.target.tagName));
+      focusLog.innerHTML = focusEvents.slice(-4).join('<br>');
+    }
+  });
+
+  // Scroll
+  var scrollCount = 0;
+  window.addEventListener('scroll', function() {
+    scrollCount++;
+    document.getElementById('bot-scroll-stats').textContent =
+            'scroll events: ' + scrollCount + ' | последний: Y=' + window.scrollY;
+  });
+
+  document.getElementById('btn-bot-run').addEventListener('click', runBotChecks);
+  document.getElementById('btn-bot-reset').addEventListener('click', function() {
+    mousePoints = [];
+    typingTimestamps = [];
+    document.getElementById('bot-checks-nav').innerHTML = '<div style="color:var(--dim);">// Нажми "Запустить проверки"</div>';
+    document.getElementById('bot-verdict').style.display = 'none';
+    document.getElementById('bot-mouse-stats').textContent = 'events: 0 | unique points: 0';
+    document.getElementById('bot-typing-stats').textContent = 'avg interval: — ms | variance: —';
+    addLog('bot-detection: reset');
+  });
+
+
+  // ═══════════════════════════════════════════════════════
+  // ZONE 15: ANTI-DEVTOOLS
+  // ═══════════════════════════════════════════════════════
+
+  var devToolsOpen = false;
+
+  // Обновление статус-бара
+  function setDevToolsStatus(open) {
+    devToolsOpen = open;
+    var bar = document.getElementById('devtools-status-bar');
+    var text = document.getElementById('devtools-status-text');
+    if (open) {
+      bar.style.background = 'rgba(255,51,102,.08)';
+      bar.style.border = '1px solid rgba(255,51,102,.3)';
+      bar.style.color = '#ff3366';
+      text.textContent = '⚠ DevTools: ОБНАРУЖЕНЫ (техника: window size)';
+      // Скрываем защищённый контент если был запущен режим скрытия
+      if (document.getElementById('dt-protected-content').dataset.hiding === 'true') {
+        document.getElementById('dt-protected-content').style.display = 'none';
+      }
+    } else {
+      bar.style.background = 'rgba(0,255,136,.08)';
+      bar.style.border = '1px solid rgba(0,255,136,.2)';
+      bar.style.color = '#00ff88';
+      text.textContent = '✓ DevTools: не обнаружены';
+      document.getElementById('dt-protected-content').style.display = 'block';
+    }
+  }
+
+  // Техника 1: Window size — запускаем в интервале
+  setInterval(function() {
+    var wDiff = window.outerWidth - window.innerWidth;
+    var hDiff = window.outerHeight - window.innerHeight;
+    var open = wDiff > 100 || hDiff > 200;
+
+    document.getElementById('dt-outer').textContent = window.outerWidth + 'x' + window.outerHeight;
+    document.getElementById('dt-inner').textContent = window.innerWidth + 'x' + window.innerHeight;
+    document.getElementById('dt-diff').textContent = 'W:' + wDiff + ' H:' + hDiff + (open ? ' → DEVTOOLS OPEN' : ' → closed');
+    document.getElementById('dt-diff').style.color = open ? '#ff3366' : '#00ff88';
+
+    setDevToolsStatus(open);
+  }, 500);
+
+  // Техника 2: console.log timing
+  document.getElementById('btn-dt-console').addEventListener('click', function() {
+    var el = document.getElementById('dt-console-result');
+    el.textContent = 'Замеряем...';
+    setTimeout(function() {
+      var start = performance.now();
+      var dummy = {};
+      for (var i = 0; i < 100; i++) {
+        // Используем группу — она тяжелее если консоль открыта
+        console.groupCollapsed('dt-test-' + i);
+        console.log(dummy);
+        console.groupEnd();
+      }
+      var elapsed = performance.now() - start;
+      var open = elapsed > 50; // порог: >50ms = консоль открыта
+      el.textContent = 'Время: ' + elapsed.toFixed(1) + 'ms | ' + (open ? '⚠ DevTools вероятно ОТКРЫТЫ' : '✓ DevTools вероятно закрыты');
+      el.style.color = open ? '#ff3366' : '#00ff88';
+      addLog('dt-console timing: ' + elapsed.toFixed(1) + 'ms');
+    }, 50);
+  });
+
+  // Техника 3: debugger timing
+  document.getElementById('btn-dt-debugger').addEventListener('click', function() {
+    var el = document.getElementById('dt-debugger-result');
+    el.textContent = 'Проверяем...';
+    setTimeout(function() {
+      var t0 = Date.now();
+      // Эта строка задержит выполнение если DevTools открыты и включён debugger
+      debugger; // eslint-disable-line no-debugger
+      var elapsed = Date.now() - t0;
+      var open = elapsed > 10;
+      el.textContent = 'Задержка: ' + elapsed + 'ms | ' + (open ? '⚠ Debugger активен → DevTools открыты' : '✓ Debugger не сработал');
+      el.style.color = open ? '#ff3366' : '#00ff88';
+      addLog('dt-debugger: ' + elapsed + 'ms');
+    }, 10);
+  });
+
+  // Техника 4: toString getter
+  (function() {
+    var detected = false;
+    var sentinel = {
+      get toString() {
+        detected = true;
+        return function() { return 'sentinel'; };
+      }
+    };
+    // Отправляем в консоль — DevTools вызовет getter при отображении
+    console.log('%cZP Polygon — Anti-DevTools Active', 'color:#00ff88; font-size:14px;');
+    console.log(sentinel);
+
+    setTimeout(function() {
+      var el = document.getElementById('dt-tostring-result');
+      if (detected) {
+        el.textContent = '⚠ toString getter сработал — консоль ОТКРЫТА';
+        el.style.color = '#ff3366';
+      } else {
+        el.textContent = '✓ toString getter не сработал — консоль закрыта при загрузке';
+        el.style.color = '#00ff88';
+      }
+    }, 200);
+  })();
+
+  // Техника 6: Native function check
+  document.getElementById('btn-dt-native').addEventListener('click', function() {
+    var checks = [
+      { name: 'console.log', fn: console.log },
+      { name: 'document.querySelector', fn: document.querySelector },
+      { name: 'navigator.getUserMedia', fn: navigator.getUserMedia },
+      { name: 'window.fetch', fn: window.fetch },
+      { name: 'JSON.stringify', fn: JSON.stringify },
+      { name: 'Array.prototype.push', fn: Array.prototype.push },
+    ];
+
+    var results = checks.map(function(c) {
+      var str = '';
+      try { str = Function.prototype.toString.call(c.fn); } catch(e) { str = ''; }
+      var isNative = str.indexOf('[native code]') > -1;
+      return (isNative ? '✓ ' : '⚠ PATCHED! ') + c.name + ' → ' + (isNative ? 'native' : 'OVERRIDDEN');
+    });
+
+    var el = document.getElementById('dt-native-result');
+    el.innerHTML = results.join('<br>');
+    el.style.color = 'var(--text)';
+    addLog('dt-native-check: done');
+  });
+
+  // Кнопки реакции
+  document.getElementById('btn-dt-warn').addEventListener('click', function() {
+    alert('⚠ Обнаружены DevTools!\n\nВаша сессия будет прервана.');
+    addLog('dt: показано предупреждение');
+  });
+
+  document.getElementById('btn-dt-hide').addEventListener('click', function() {
+    var content = document.getElementById('dt-protected-content');
+    content.dataset.hiding = 'true';
+    if (devToolsOpen) {
+      content.style.display = 'none';
+      addLog('dt: контент скрыт (DevTools открыты)');
+    } else {
+      addLog('dt: контент виден (DevTools закрыты)');
+    }
+  });
+
+  document.getElementById('btn-dt-clear').addEventListener('click', function() {
+    var content = document.getElementById('dt-protected-content');
+    content.dataset.hiding = 'false';
+    content.style.display = 'block';
+    addLog('dt: сброшено');
+  });
+
+  // CSS-based detection: мониторим computed размер элемента
+  // Когда Inspector выбирает элемент — его outline меняется
+  setInterval(function() {
+    var target = document.getElementById('dt-css-target');
+    var computed = window.getComputedStyle(target);
+    var outline = computed.outlineWidth;
+    // В некоторых браузерах при выборе в Inspector появляется outline
+    document.getElementById('dt-css-result').textContent =
+            'outline: ' + outline + ' | borderColor: ' + computed.borderColor;
+  }, 1000);
+
+
+  // ═══════════════════════════════════════════════════════
+  // ОБЩИЙ EVENT LOG (из оригинального скрипта)
+  // ═══════════════════════════════════════════════════════
+  var log = document.getElementById('event-log');
+  function addLog(msg) {
+    if (!log) return;
+    var d = new Date();
+    var ts = d.toTimeString().slice(0,8);
+    var line = document.createElement('div');
+    line.style.color = '#c8c8d8';
+    line.textContent = '[' + ts + '] ' + msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+</script>
+</body>
+</html>
