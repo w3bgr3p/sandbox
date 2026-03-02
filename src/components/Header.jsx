@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 
-export default function Header({ view, setView, access }) {
+export default function Header({ view, setView, access, onReset }) {
   const { ready, authenticated, user, logout, login } = usePrivy()
   const { wallets } = useWallets()
   const [showUser, setShowUser] = useState(false)
@@ -72,6 +72,12 @@ export default function Header({ view, setView, access }) {
           <a href="#devtools" style={{ color: '#ff6600' }}>Devtools</a>
         </>}
       </nav>
+
+      {view === 'sandbox' && (
+        <button className="btn-reset-state" onClick={onReset} title="Сбросить состояние страницы">
+          ↺ Сброс
+        </button>
+      )}
 
       {ready && (
         authenticated ? (

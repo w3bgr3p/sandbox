@@ -675,6 +675,24 @@ footer {
 }
 .btn-login-header:hover { opacity: .85; }
 
+.btn-reset-state {
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color .15s, border-color .15s;
+}
+.btn-reset-state:hover {
+  color: var(--accent2);
+  border-color: rgba(255,51,102,.5);
+}
+
 /* ── Lessons layout ── */
 .lessons-layout {
   display: grid;

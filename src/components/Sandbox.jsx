@@ -886,13 +886,15 @@ function Zone15() {
 
 // ─── MAIN SANDBOX ─────────────────────────────────────────────────────────────
 export default function Sandbox({ view, setView, lessonsContent, access }) {
+  const [resetKey, setResetKey] = useState(0)
+
   return (
     <div>
-      <Header view={view} setView={setView} access={access} />
+      <Header view={view} setView={setView} access={access} onReset={() => setResetKey(k => k + 1)} />
       {view === 'lessons' ? (
         lessonsContent
       ) : (
-        <div className="container">
+        <div key={resetKey} className="container">
           <Zone11 />
           <Zone01 />
           <Zone02 />
